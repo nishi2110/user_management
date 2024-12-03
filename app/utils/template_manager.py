@@ -1,7 +1,7 @@
 """Module to manage email templates and render them with context."""
 
-import markdown2
 from pathlib import Path
+import markdown2
 
 
 class TemplateManager:

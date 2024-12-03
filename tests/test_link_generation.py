@@ -15,8 +15,6 @@ from app.utils.link_generation import (
     generate_pagination_links,
 )
 
-from urllib.parse import urlparse, parse_qs, urlunparse, urlencode
-
 
 def normalize_url(url):
     """Normalize the URL for consistent comparison by sorting query parameters."""
