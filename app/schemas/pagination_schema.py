@@ -4,6 +4,7 @@ from typing import List, Optional
 from uuid import UUID
 from pydantic import BaseModel, EmailStr, Field, HttpUrl, validator, conint
 
+
 # Pagination Model
 class Pagination(BaseModel):
     page: int = Field(..., description="Current page number.")
@@ -13,20 +14,15 @@ class Pagination(BaseModel):
 
     class Config:
         json_schema_extra = {
-            "example": {
-                "page": 1,
-                "per_page": 10,
-                "total_items": 50,
-                "total_pages": 5
-            }
+            "example": {"page": 1, "per_page": 10, "total_items": 50, "total_pages": 5}
         }
-
 
 
 class PaginationLink(BaseModel):
     rel: str
     href: HttpUrl
     method: str = "GET"
+
 
 class EnhancedPagination(Pagination):
     links: List[PaginationLink] = []
