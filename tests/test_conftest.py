@@ -1,4 +1,6 @@
-# test_users.py
+""" This file contains tests to tests user model and its methods """
+
+# TODO: test_conftest does not seem like an accurate name for this file
 
 from builtins import len
 import pytest
@@ -22,6 +24,7 @@ async def test_user_creation(db_session, verified_user):
 # Apply similar corrections to other test functions
 @pytest.mark.asyncio
 async def test_locked_user(db_session, locked_user):
+    """Test that a locked user is correctly created and stored in the database."""
     result = await db_session.execute(select(User).filter_by(email=locked_user.email))
     stored_user = result.scalars().first()
     assert stored_user.is_locked
@@ -29,6 +32,7 @@ async def test_locked_user(db_session, locked_user):
 
 @pytest.mark.asyncio
 async def test_verified_user(db_session, verified_user):
+    """Test that a verified user is correctly created and stored in the database."""
     result = await db_session.execute(select(User).filter_by(email=verified_user.email))
     stored_user = result.scalars().first()
     assert stored_user.email_verified
@@ -36,6 +40,7 @@ async def test_verified_user(db_session, verified_user):
 
 @pytest.mark.asyncio
 async def test_user_role(db_session, admin_user):
+    """Test that a user's role is correctly assigned and can be updated."""
     result = await db_session.execute(select(User).filter_by(email=admin_user.email))
     stored_user = result.scalars().first()
     assert stored_user.role == UserRole.ADMIN
@@ -45,6 +50,7 @@ async def test_user_role(db_session, admin_user):
 async def test_bulk_user_creation_performance(
     db_session, users_with_same_role_50_users
 ):
+    """Test that 50 users with the same role can be created and stored in the database."""
     result = await db_session.execute(
         select(User).filter_by(role=UserRole.AUTHENTICATED)
     )
@@ -54,11 +60,13 @@ async def test_bulk_user_creation_performance(
 
 @pytest.mark.asyncio
 async def test_password_hashing(user):
+    """Test that a password is correctly hashed."""
     assert verify_password("MySuperPassword$1234", user.hashed_password)
 
 
 @pytest.mark.asyncio
 async def test_user_unlock(db_session, locked_user):
+    """Test that a user account can be unlocked."""
     locked_user.unlock_account()
     await db_session.commit()
     result = await db_session.execute(select(User).filter_by(email=locked_user.email))
@@ -68,6 +76,7 @@ async def test_user_unlock(db_session, locked_user):
 
 @pytest.mark.asyncio
 async def test_update_professional_status(db_session, verified_user):
+    """Test that a user's professional status can be updated."""
     verified_user.update_professional_status(True)
     await db_session.commit()
     result = await db_session.execute(select(User).filter_by(email=verified_user.email))

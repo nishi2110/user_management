@@ -1,3 +1,5 @@
+""" This module defines the User model, representing a user within the application. """
+
 from builtins import bool, int, str
 from datetime import datetime
 from enum import Enum
@@ -100,15 +102,19 @@ class User(Base):
         return f"<User {self.nickname}, Role: {self.role.name}>"
 
     def lock_account(self):
+        """Locks the user account."""
         self.is_locked = True
 
     def unlock_account(self):
+        """Unlocks the user account."""
         self.is_locked = False
 
     def verify_email(self):
+        """Marks the user's email as verified."""
         self.email_verified = True
 
     def has_role(self, role_name: UserRole) -> bool:
+        """Checks if the user has a specified role."""
         return self.role == role_name
 
     def update_professional_status(self, status: bool):

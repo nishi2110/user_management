@@ -1,7 +1,11 @@
+""" Link schema module. """
+
 from pydantic import BaseModel, Field, HttpUrl
 
 
 class Link(BaseModel):
+    """Link schema."""
+
     rel: str = Field(..., description="Relation type of the link.")
     href: HttpUrl = Field(..., description="The URL of the link.")
     action: str = Field(
@@ -13,6 +17,8 @@ class Link(BaseModel):
     )
 
     class Config:
+        """Pydantic model configuration."""
+
         json_schema_extra = {
             "example": {
                 "rel": "self",

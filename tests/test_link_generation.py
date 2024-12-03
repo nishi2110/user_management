@@ -1,3 +1,5 @@
+"""Tests for the link generation utilities."""
+
 from builtins import len, max, sorted, str
 from unittest.mock import MagicMock
 from urllib.parse import parse_qs, urlparse, parse_qsl, urlunparse, urlencode
@@ -30,6 +32,7 @@ def normalize_url(url):
 
 @pytest.fixture
 def mock_request():
+    """Mock the FastAPI Request object."""
     request = MagicMock(spec=Request)
     request.url_for = MagicMock(
         side_effect=lambda action, user_id: f"http://testserver/{action}/{user_id}"
@@ -39,11 +42,13 @@ def mock_request():
 
 
 def test_create_link():
+    """Test create_link function"""
     link = create_link("self", "http://example.com", "GET", "view")
     assert normalize_url(str(link.href)) == "http://example.com"
 
 
 def test_create_user_links(mock_request):
+    """Test create_user_links function"""
     user_id = uuid4()
     links = create_user_links(user_id, mock_request)
     assert len(links) == 3
@@ -57,6 +62,7 @@ def test_create_user_links(mock_request):
 
 
 def test_generate_pagination_links(mock_request):
+    """Test generate_pagination_links function"""
     skip = 10
     limit = 5
     total_items = 50

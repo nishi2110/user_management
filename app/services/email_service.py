@@ -1,3 +1,5 @@
+""" Email Service Module """
+
 # email_service.py
 from builtins import ValueError, dict, str
 from settings.config import settings
@@ -7,6 +9,8 @@ from app.models.user_model import User
 
 
 class EmailService:
+    """Service class for sending emails."""
+
     def __init__(self, template_manager: TemplateManager):
         self.smtp_client = SMTPClient(
             server=settings.smtp_server,
@@ -17,6 +21,7 @@ class EmailService:
         self.template_manager = template_manager
 
     async def send_user_email(self, user_data: dict, email_type: str):
+        """Send an email to a user."""
         subject_map = {
             "email_verification": "Verify Your Account",
             "password_reset": "Password Reset Instructions",
@@ -32,6 +37,7 @@ class EmailService:
         )
 
     async def send_verification_email(self, user: User):
+        """Send an email with the verification link to the user."""
         verification_url = f"{settings.server_base_url}verify-email/{user.id}/{user.verification_token}"
         await self.send_user_email(
             {

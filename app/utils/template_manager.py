@@ -1,8 +1,12 @@
+"""Module to manage email templates and render them with context."""
+
 import markdown2
 from pathlib import Path
 
 
 class TemplateManager:
+    """Class to manage email templates and render them with context."""
+
     def __init__(self):
         # Dynamically determine the root path of the project
         self.root_dir = (

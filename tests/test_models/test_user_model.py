@@ -1,3 +1,5 @@
+""" Tests for the User model. """
+
 from builtins import repr
 from datetime import datetime, timezone
 import pytest

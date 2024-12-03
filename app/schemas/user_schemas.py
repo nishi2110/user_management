@@ -1,3 +1,5 @@
+"""User Pydantic models."""
+
 from builtins import ValueError, any, bool, str
 from pydantic import BaseModel, EmailStr, Field, validator, root_validator
 from typing import Optional, List
@@ -10,6 +12,7 @@ from app.utils.nickname_gen import generate_nickname
 
 
 def validate_url(url: Optional[str]) -> Optional[str]:
+    """Validate the URL format."""
     if url is None:
         return url
     url_regex = r"^https?:\/\/[^\s/$.?#].[^\s]*$"
@@ -19,6 +22,8 @@ def validate_url(url: Optional[str]) -> Optional[str]:
 
 
 class UserBase(BaseModel):
+    """Base User Schema"""
+
     email: EmailStr = Field(..., example="john.doe@example.com")
     nickname: Optional[str] = Field(
         None, min_length=3, pattern=r"^[\w-]+$", example=generate_nickname()
@@ -48,15 +53,21 @@ class UserBase(BaseModel):
     )(validate_url)
 
     class Config:
+        """Pydantic model configuration."""
+
         from_attributes = True
 
 
 class UserCreate(UserBase):
+    """User Create Schema"""
+
     email: EmailStr = Field(..., example="john.doe@example.com")
     password: str = Field(..., example="Secure*1234")
 
 
 class UserUpdate(UserBase):
+    """User Update Schema"""
+
     email: Optional[EmailStr] = Field(None, example="john.doe@example.com")
     nickname: Optional[str] = Field(
         None, min_length=3, pattern=r"^[\w-]+$", example="john_doe123"
@@ -79,12 +90,15 @@ class UserUpdate(UserBase):
 
     @root_validator(pre=True)
     def check_at_least_one_value(cls, values):
+        """Check that at least one field is provided for update."""
         if not any(values.values()):
             raise ValueError("At least one field must be provided for update")
         return values
 
 
 class UserResponse(UserBase):
+    """User Response Schema"""
+
     id: uuid.UUID = Field(..., example=uuid.uuid4())
     email: EmailStr = Field(..., example="john.doe@example.com")
     nickname: Optional[str] = Field(
@@ -95,11 +109,15 @@ class UserResponse(UserBase):
 
 
 class LoginRequest(BaseModel):
+    """Login Request Schema"""
+
     email: str = Field(..., example="john.doe@example.com")
     password: str = Field(..., example="Secure*1234")
 
 
 class ErrorResponse(BaseModel):
+    """Error Response Schema"""
+
     error: str = Field(..., example="Not Found")
     details: Optional[str] = Field(
         None, example="The requested resource was not found."
@@ -107,6 +125,8 @@ class ErrorResponse(BaseModel):
 
 
 class UserListResponse(BaseModel):
+    """User List Response Schema"""
+
     items: List[UserResponse] = Field(
         ...,
         example=[

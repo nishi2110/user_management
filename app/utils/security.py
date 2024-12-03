@@ -1,8 +1,10 @@
+""" Security utilities for hashing and verifying passwords. """
+
 # app/security.py
 from builtins import Exception, ValueError, bool, int, str
+from logging import getLogger
 import secrets
 import bcrypt
-from logging import getLogger
 
 # Set up logging
 logger = getLogger(__name__)
@@ -57,4 +59,5 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 
 
 def generate_verification_token():
+    """Generate a random verification token."""
     return secrets.token_urlsafe(16)  # Generates a secure 16-byte URL-safe token

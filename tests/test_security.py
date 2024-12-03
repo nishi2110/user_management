@@ -1,3 +1,5 @@
+"""Tests for the security module."""
+
 # test_security.py
 from builtins import RuntimeError, ValueError, isinstance, str
 import pytest

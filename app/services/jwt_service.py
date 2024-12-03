@@ -1,3 +1,5 @@
+""" JWT Service Module """
+
 # app/services/jwt_service.py
 from builtins import dict, str
 import jwt
@@ -6,6 +8,7 @@ from settings.config import settings
 
 
 def create_access_token(*, data: dict, expires_delta: timedelta = None):
+    """Create an access token."""
     to_encode = data.copy()
     # Convert role to uppercase before encoding the JWT
     if "role" in to_encode:
@@ -23,6 +26,7 @@ def create_access_token(*, data: dict, expires_delta: timedelta = None):
 
 
 def decode_token(token: str):
+    """Decode a JWT token."""
     try:
         decoded = jwt.decode(
             token, settings.jwt_secret_key, algorithms=[settings.jwt_algorithm]

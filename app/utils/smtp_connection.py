@@ -1,13 +1,16 @@
-# smtp_client.py
+""" SMTP connection module """
+
 from builtins import Exception, int, str
 import smtplib
+import logging
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from settings.config import settings
-import logging
 
 
 class SMTPClient:
+    """SMTP client to send emails."""
+
     def __init__(self, server: str, port: int, username: str, password: str):
         self.server = server
         self.port = port
@@ -15,6 +18,7 @@ class SMTPClient:
         self.password = password
 
     def send_email(self, subject: str, html_content: str, recipient: str):
+        """Send an email with the given subject and HTML content to the recipient."""
         try:
             message = MIMEMultipart("alternative")
             message["Subject"] = subject

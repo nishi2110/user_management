@@ -1,3 +1,5 @@
+""" Utility functions for generating links in responses. """
+
 from builtins import dict, int, max, str
 from typing import List, Callable
 from urllib.parse import urlencode
@@ -10,10 +12,12 @@ from app.schemas.pagination_schema import PaginationLink
 
 # Utility function to create a link
 def create_link(rel: str, href: str, method: str = "GET", action: str = None) -> Link:
+    """Create a link object with the given parameters."""
     return Link(rel=rel, href=href, method=method, action=action)
 
 
 def create_pagination_link(rel: str, base_url: str, params: dict) -> PaginationLink:
+    """Create a pagination link with the given parameters."""
     # Ensure parameters are added in a specific order
     query_string = f"skip={params['skip']}&limit={params['limit']}"
     return PaginationLink(rel=rel, href=f"{base_url}?{query_string}")
@@ -39,6 +43,7 @@ def create_user_links(user_id: UUID, request: Request) -> List[Link]:
 def generate_pagination_links(
     request: Request, skip: int, limit: int, total_items: int
 ) -> List[PaginationLink]:
+    """Generate pagination links for the given request."""
     base_url = str(request.url)
     total_pages = (total_items + limit - 1) // limit
     links = [

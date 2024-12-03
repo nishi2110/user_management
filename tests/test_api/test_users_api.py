@@ -1,3 +1,5 @@
+"""Tests for the users API endpoints."""
+
 from builtins import str
 import pytest
 from httpx import AsyncClient
@@ -11,6 +13,7 @@ from app.services.jwt_service import decode_token  # Import your FastAPI app
 # Example of a test function using the async_client fixture
 @pytest.mark.asyncio
 async def test_create_user_access_denied(async_client, user_token, email_service):
+    """Test that a regular user cannot create a new user."""
     headers = {"Authorization": f"Bearer {user_token}"}
     # Define user data for the test
     user_data = {
@@ -27,6 +30,7 @@ async def test_create_user_access_denied(async_client, user_token, email_service
 # You can similarly refactor other test functions to use the async_client fixture
 @pytest.mark.asyncio
 async def test_retrieve_user_access_denied(async_client, verified_user, user_token):
+    """Test that a regular user cannot retrieve another user's data."""
     headers = {"Authorization": f"Bearer {user_token}"}
     response = await async_client.get(f"/users/{verified_user.id}", headers=headers)
     assert response.status_code == 403
@@ -34,6 +38,7 @@ async def test_retrieve_user_access_denied(async_client, verified_user, user_tok
 
 @pytest.mark.asyncio
 async def test_retrieve_user_access_allowed(async_client, admin_user, admin_token):
+    """Test that an admin user can retrieve another user's data."""
     headers = {"Authorization": f"Bearer {admin_token}"}
     response = await async_client.get(f"/users/{admin_user.id}", headers=headers)
     assert response.status_code == 200
@@ -42,6 +47,7 @@ async def test_retrieve_user_access_allowed(async_client, admin_user, admin_toke
 
 @pytest.mark.asyncio
 async def test_update_user_email_access_denied(async_client, verified_user, user_token):
+    """Test that a regular user cannot update another user's email."""
     updated_data = {"email": f"updated_{verified_user.id}@example.com"}
     headers = {"Authorization": f"Bearer {user_token}"}
     response = await async_client.put(
@@ -52,6 +58,7 @@ async def test_update_user_email_access_denied(async_client, verified_user, user
 
 @pytest.mark.asyncio
 async def test_update_user_email_access_allowed(async_client, admin_user, admin_token):
+    """Test that an admin user can update another user's email."""
     updated_data = {"email": f"updated_{admin_user.id}@example.com"}
     headers = {"Authorization": f"Bearer {admin_token}"}
     response = await async_client.put(
@@ -63,6 +70,7 @@ async def test_update_user_email_access_allowed(async_client, admin_user, admin_
 
 @pytest.mark.asyncio
 async def test_delete_user(async_client, admin_user, admin_token):
+    """Test that an admin user can delete another user."""
     headers = {"Authorization": f"Bearer {admin_token}"}
     delete_response = await async_client.delete(
         f"/users/{admin_user.id}", headers=headers
@@ -75,6 +83,7 @@ async def test_delete_user(async_client, admin_user, admin_token):
 
 @pytest.mark.asyncio
 async def test_create_user_duplicate_email(async_client, verified_user):
+    """Test creating a user with an email that already exists."""
     user_data = {
         "email": verified_user.email,
         "password": "AnotherPassword123!",
@@ -87,6 +96,7 @@ async def test_create_user_duplicate_email(async_client, verified_user):
 
 @pytest.mark.asyncio
 async def test_create_user_invalid_email(async_client):
+    """Test creating a user with an invalid email."""
     user_data = {
         "email": "notanemail",
         "password": "ValidPassword123!",
@@ -102,6 +112,7 @@ from urllib.parse import urlencode
 
 @pytest.mark.asyncio
 async def test_login_success(async_client, verified_user):
+    """Test successful login with valid credentials."""
     # Attempt to login with the test user
     form_data = {"username": verified_user.email, "password": "MySuperPassword$1234"}
     response = await async_client.post(
@@ -126,6 +137,7 @@ async def test_login_success(async_client, verified_user):
 
 @pytest.mark.asyncio
 async def test_login_user_not_found(async_client):
+    """Test login with a user that does not exist."""
     form_data = {
         "username": "nonexistentuser@here.edu",
         "password": "DoesNotMatter123!",
@@ -141,6 +153,7 @@ async def test_login_user_not_found(async_client):
 
 @pytest.mark.asyncio
 async def test_login_incorrect_password(async_client, verified_user):
+    """Test login with incorrect password."""
     form_data = {"username": verified_user.email, "password": "IncorrectPassword123!"}
     response = await async_client.post(
         "/login/",
@@ -153,6 +166,7 @@ async def test_login_incorrect_password(async_client, verified_user):
 
 @pytest.mark.asyncio
 async def test_login_unverified_user(async_client, unverified_user):
+    """Test login with an unverified user."""
     form_data = {"username": unverified_user.email, "password": "MySuperPassword$1234"}
     response = await async_client.post(
         "/login/",
@@ -164,6 +178,7 @@ async def test_login_unverified_user(async_client, unverified_user):
 
 @pytest.mark.asyncio
 async def test_login_locked_user(async_client, locked_user):
+    """Test login with a locked user."""
     form_data = {"username": locked_user.email, "password": "MySuperPassword$1234"}
     response = await async_client.post(
         "/login/",
@@ -179,6 +194,7 @@ async def test_login_locked_user(async_client, locked_user):
 
 @pytest.mark.asyncio
 async def test_delete_user_does_not_exist(async_client, admin_token):
+    """Test deleting a user that does not exist."""
     non_existent_user_id = "00000000-0000-0000-0000-000000000000"  # Valid UUID format
     headers = {"Authorization": f"Bearer {admin_token}"}
     delete_response = await async_client.delete(
@@ -189,6 +205,7 @@ async def test_delete_user_does_not_exist(async_client, admin_token):
 
 @pytest.mark.asyncio
 async def test_update_user_github(async_client, admin_user, admin_token):
+    """Test updating a user's GitHub profile URL."""
     updated_data = {"github_profile_url": "http://www.github.com/kaw393939"}
     headers = {"Authorization": f"Bearer {admin_token}"}
     response = await async_client.put(
@@ -200,6 +217,7 @@ async def test_update_user_github(async_client, admin_user, admin_token):
 
 @pytest.mark.asyncio
 async def test_update_user_linkedin(async_client, admin_user, admin_token):
+    """Test updating a user's LinkedIn profile URL."""
     updated_data = {"linkedin_profile_url": "http://www.linkedin.com/kaw393939"}
     headers = {"Authorization": f"Bearer {admin_token}"}
     response = await async_client.put(
@@ -213,6 +231,7 @@ async def test_update_user_linkedin(async_client, admin_user, admin_token):
 
 @pytest.mark.asyncio
 async def test_list_users_as_admin(async_client, admin_token):
+    """Test listing users as an admin."""
     response = await async_client.get(
         "/users/", headers={"Authorization": f"Bearer {admin_token}"}
     )
@@ -222,6 +241,7 @@ async def test_list_users_as_admin(async_client, admin_token):
 
 @pytest.mark.asyncio
 async def test_list_users_as_manager(async_client, manager_token):
+    """Test listing users as a manager."""
     response = await async_client.get(
         "/users/", headers={"Authorization": f"Bearer {manager_token}"}
     )
@@ -230,6 +250,7 @@ async def test_list_users_as_manager(async_client, manager_token):
 
 @pytest.mark.asyncio
 async def test_list_users_unauthorized(async_client, user_token):
+    """Test listing users as a regular user."""
     response = await async_client.get(
         "/users/", headers={"Authorization": f"Bearer {user_token}"}
     )

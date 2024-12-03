@@ -1,3 +1,5 @@
+""" Tests for email service. """
+
 import pytest
 from app.services.email_service import EmailService
 from app.utils.template_manager import TemplateManager
@@ -5,6 +7,7 @@ from app.utils.template_manager import TemplateManager
 
 @pytest.mark.asyncio
 async def test_send_markdown_email(email_service):
+    """Test sending a markdown email."""
     user_data = {
         "email": "test@example.com",
         "name": "Test User",

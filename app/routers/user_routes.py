@@ -244,6 +244,7 @@ async def list_users(
     db: AsyncSession = Depends(get_db),
     current_user: dict = Depends(require_role(["ADMIN", "MANAGER"])),
 ):
+    """List all users with pagination."""
     total_users = await UserService.count(db)
     users = await UserService.list_users(db, skip, limit)
 
@@ -267,6 +268,7 @@ async def register(
     session: AsyncSession = Depends(get_db),
     email_service: EmailService = Depends(get_email_service),
 ):
+    """Register a new user."""
     user = await UserService.register_user(
         session, user_data.model_dump(), email_service
     )
@@ -280,6 +282,7 @@ async def login(
     form_data: OAuth2PasswordRequestForm = Depends(),
     session: AsyncSession = Depends(get_db),
 ):
+    """Login endpoint for users."""
     if await UserService.is_account_locked(session, form_data.username):
         raise HTTPException(
             status_code=400,
@@ -309,6 +312,7 @@ async def login(
     form_data: OAuth2PasswordRequestForm = Depends(),
     session: AsyncSession = Depends(get_db),
 ):
+    """Login endpoint for users."""
     if await UserService.is_account_locked(session, form_data.username):
         raise HTTPException(
             status_code=400,

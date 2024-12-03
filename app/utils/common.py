@@ -1,3 +1,5 @@
+""" This module contains common utility functions that are used across the application. """
+
 import logging.config
 import os
 from app.dependencies import get_settings

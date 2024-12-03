@@ -1,3 +1,5 @@
+""" Validators for the application. """
+
 from builtins import bool, str
 from email_validator import validate_email, EmailNotValidError
 
