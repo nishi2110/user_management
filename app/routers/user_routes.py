@@ -33,6 +33,8 @@ from app.services.jwt_service import create_access_token
 from app.utils.link_generation import create_user_links, generate_pagination_links
 from app.dependencies import get_settings
 from app.services.email_service import EmailService
+from sqlalchemy.sql import text
+
 router = APIRouter()
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 settings = get_settings()
@@ -245,3 +247,72 @@ async def verify_email(user_id: UUID, token: str, db: AsyncSession = Depends(get
     if await UserService.verify_email_with_token(db, user_id, token):
         return {"message": "Email verified successfully"}
     raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid or expired verification token")
+
+
+@router.get("/users/search", response_model=UserListResponse, name="search_users", tags=["User Management Requires (Admin or Manager Roles)"])
+async def search_users(
+    column: str,
+    value: str,
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+    token: str = Depends(oauth2_scheme),
+    current_user: dict = Depends(require_role(["ADMIN", "MANAGER"]))
+):
+    """
+    Search users by a specific column and value.
+
+    Args:
+        column: The column to filter by (e.g., 'first_name').
+        value: The value to search for in the specified column.
+        request: The request object, used to generate HATEOAS links.
+        db: Dependency that provides an AsyncSession for database access.
+        token: OAuth2 access token for authentication and authorization.
+    """
+    # Define allowed columns to prevent SQL injection
+    allowed_columns = [
+        "id", "nickname", "email", "first_name", "last_name", "bio",
+        "profile_picture_url", "linkedin_profile_url", "github_profile_url",
+        "role", "is_professional", "professional_status_updated_at",
+        "last_login_at", "failed_login_attempts", "is_locked", "created_at",
+        "updated_at", "verification_token", "email_verified"
+    ]
+
+    # Validate the column
+    if column not in allowed_columns:
+        raise HTTPException(status_code=400, detail=f"Invalid column: {column}")
+
+    # Query the database dynamically
+    query = text(f"SELECT * FROM users WHERE {column} ILIKE :value")
+    result = await db.execute(query, {"value": f"%{value}%"})
+    users = result.mappings().all()
+
+    # Map results to the response model
+    user_responses = [
+        UserResponse.model_construct(
+            id=user["id"],
+            nickname=user["nickname"],
+            first_name=user["first_name"],
+            last_name=user["last_name"],
+            bio=user["bio"],
+            profile_picture_url=user["profile_picture_url"],
+            github_profile_url=user["github_profile_url"],
+            linkedin_profile_url=user["linkedin_profile_url"],
+            role=user["role"],
+            email=user["email"],
+            last_login_at=user["last_login_at"],
+            created_at=user["created_at"],
+            updated_at=user["updated_at"],
+            links=create_user_links(user["id"], request)
+        ) for user in users
+    ]
+
+    # Return the response
+    return UserListResponse(
+        items=user_responses,
+        total=len(user_responses),
+        page=1,  # No pagination implemented for this endpoint.
+        size=len(user_responses),
+        links=[]  # Add navigational links if needed.
+    )
+
+
