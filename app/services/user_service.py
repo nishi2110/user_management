@@ -180,6 +180,19 @@ class UserService:
             await session.commit()
             return True
         return False
+    
+    @classmethod
+    async def search_by_param(cls, session: AsyncSession, user_id: UUID, nickname: str
+                              ,first_name:str, last_name:str ) -> bool:
+        user = await cls.get_by_id(session, user_id)
+        if user and user.nickname == nickname:
+            return user
+        if user and user.first_name == first_name:
+            return user
+        if user and user.last_name == last_name:
+            return user
+        return False
+
 
     @classmethod
     async def count(cls, session: AsyncSession) -> int:
