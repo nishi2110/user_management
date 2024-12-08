@@ -38,12 +38,23 @@ class UserService:
 
     @classmethod
     async def _fetch_user(cls, session: AsyncSession, **filters) -> Optional[User]:
-        query = select(User).filter_by(**filters)
-        result = await cls._execute_query(session, query)
-        return result.scalars().first() if result else None
+        try:
+            query = select(User).filter_by(**filters)
+            logger.debug(f"Executing query to fetch user with filters: {filters}")
+            result = await cls._execute_query(session, query)
+            user = result.scalars().first() if result else None
+            if user:
+                logger.debug(f"User found: {user}")
+            else:
+                logger.warning(f"No user found with filters: {filters}")
+            return user
+        except Exception as e:
+            logger.error(f"Error fetching user with filters {filters}: {e}")
+            return None
 
     @classmethod
     async def get_by_id(cls, session: AsyncSession, user_id: UUID) -> Optional[User]:
+        logger.debug(f"Fetching user with ID: {user_id}")
         return await cls._fetch_user(session, id=user_id)
 
     @classmethod
