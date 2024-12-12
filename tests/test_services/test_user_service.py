@@ -161,3 +161,27 @@ async def test_unlock_user_account(db_session, locked_user):
     assert unlocked, "The account should be unlocked"
     refreshed_user = await UserService.get_by_id(db_session, locked_user.id)
     assert not refreshed_user.is_locked, "The user should no longer be locked"
+
+
+    # Test user deletion when the user is an admin
+async def test_delete_admin_user(db_session, admin_user):
+    deletion_success = await UserService.delete(db_session, admin_user.id)
+    assert deletion_success is True, "Admin user should be deletable"
+    assert await UserService.get_by_id(db_session, admin_user.id) is None, "Admin user should no longer exist in the database"
+
+# Test login fails if the user's email is not verified
+async def test_login_user_unverified_email(db_session, unverified_user):
+    user = await UserService.login_user(db_session, unverified_user.email, "ValidPassword123!")
+    assert user is None, "User login should fail if the email is not verified"
+
+# Test listing users with an empty database
+async def test_list_users_empty_database(db_session):
+    users = await UserService.list_users(db_session)
+    assert len(users) == 0, "The user list should be empty when there are no users in the database"
+
+# Test resetting a user's password fails for non-existent user
+async def test_reset_password_non_existent_user(db_session):
+    non_existent_user_id = "non-existent-id"
+    reset_success = await UserService.reset_password(db_session, non_existent_user_id, "NewPassword123!")
+    assert reset_success is False, "Password reset should fail for a non-existent user"
+
