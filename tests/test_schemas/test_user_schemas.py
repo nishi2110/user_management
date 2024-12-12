@@ -108,3 +108,29 @@ def test_user_base_url_invalid(url, user_base_data):
     user_base_data["profile_picture_url"] = url
     with pytest.raises(ValidationError):
         UserBase(**user_base_data)
+
+# Test for required fields in UserCreate
+def test_user_create_missing_required_fields():
+    """
+    Ensure UserCreate raises validation errors when required fields are missing.
+    """
+    with pytest.raises(ValidationError):
+        UserCreate(nickname="testuser")  # Missing email and password
+
+# Test for UserUpdate with no fields provided
+def test_user_update_no_fields():
+    """
+    Ensure UserUpdate raises an error when no fields are provided.
+    """
+    with pytest.raises(ValidationError):
+        UserUpdate()
+
+# Test for invalid email format in UserBase
+@pytest.mark.parametrize("email", ["plainaddress", "missingatsymbol.com", "@missingusername.com", "username@.com"])
+def test_user_base_invalid_email(email, user_base_data):
+    """
+    Ensure UserBase raises validation errors for invalid email formats.
+    """
+    user_base_data["email"] = email
+    with pytest.raises(ValidationError):
+        UserBase(**user_base_data)
