@@ -190,3 +190,47 @@ async def test_list_users_unauthorized(async_client, user_token):
         headers={"Authorization": f"Bearer {user_token}"}
     )
     assert response.status_code == 403  # Forbidden, as expected for regular user
+
+
+@pytest.mark.asyncio
+async def test_verify_email_with_invalid_token(async_client, verified_user):
+    """
+    Test verifying a user's email with an invalid token.
+    """
+    invalid_token = "invalid_token"
+    response = await async_client.get(
+        f"/verify-email/{verified_user.id}/{invalid_token}"
+    )
+    assert response.status_code == 400
+    assert "Invalid or expired verification token" in response.json().get("detail", "")
+
+
+@pytest.mark.asyncio
+async def test_list_users_pagination(async_client, admin_token):
+    """
+    Test listing users with pagination and ensure correct metadata is returned.
+    """
+    response = await async_client.get(
+        "/users/?skip=0&limit=5",
+        headers={"Authorization": f"Bearer {admin_token}"}
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert 'items' in data
+    assert 'total' in data
+    assert len(data['items']) <= 5  # Ensure the limit is respected
+
+@pytest.mark.asyncio
+async def test_create_user_missing_required_field(async_client, admin_token):
+    """
+    Test creating a user with missing required fields.
+    """
+    headers = {"Authorization": f"Bearer {admin_token}"}
+    user_data = {
+        "nickname": generate_nickname(),
+        # Missing 'email' and 'password'
+    }
+    response = await async_client.post("/users/", json=user_data, headers=headers)
+    assert response.status_code == 422  # Unprocessable Entity
+    assert "detail" in response.json()
+
