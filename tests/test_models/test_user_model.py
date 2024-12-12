@@ -177,3 +177,15 @@ async def test_professional_status_update(db_session: AsyncSession, user: User):
     await db_session.refresh(user)
     assert user.is_professional is True, "The user's professional status should be updated to True."
     assert user.professional_status_updated_at is not None, "The professional status updated timestamp should not be None."
+
+@pytest.mark.asyncio
+async def test_email_verification_test1(db_session: AsyncSession, user: User):
+    """
+    Tests the email verification functionality.
+    """
+    # Initially, the email should not be verified.
+    # Verify the email and check.
+    user.verify_email()
+    await db_session.commit()
+    await db_session.refresh(user)
+    assert user.email_verified, "Email should be verified after calling verify_email()"
