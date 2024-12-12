@@ -139,3 +139,41 @@ async def test_update_user_role(db_session: AsyncSession, user: User):
     await db_session.commit()
     await db_session.refresh(user)
     assert user.role == UserRole.ADMIN, "Role update should persist correctly in the database"
+
+@pytest.mark.asyncio
+async def test_user_bio_update(db_session: AsyncSession, user: User):
+    """
+    Tests updating the user's bio and ensuring it persists correctly.
+    """
+    new_bio = "This is a new bio for the user."
+    user.bio = new_bio
+    await db_session.commit()
+    await db_session.refresh(user)
+    assert user.bio == new_bio, "The user's bio should be updated correctly in the database."
+
+@pytest.mark.asyncio
+async def test_failed_login_attempts_reset(db_session: AsyncSession, user: User):
+    """
+    Tests resetting failed login attempts for a user.
+    """
+    user.failed_login_attempts = 5  # Simulate failed login attempts
+    await db_session.commit()
+    await db_session.refresh(user)
+    assert user.failed_login_attempts == 5, "Failed login attempts should be set to 5 initially."
+
+    # Reset failed login attempts
+    user.failed_login_attempts = 0
+    await db_session.commit()
+    await db_session.refresh(user)
+    assert user.failed_login_attempts == 0, "Failed login attempts should be reset to 0."
+
+@pytest.mark.asyncio
+async def test_professional_status_update(db_session: AsyncSession, user: User):
+    """
+    Tests updating the user's professional status and ensuring the timestamp is updated correctly.
+    """
+    user.update_professional_status(True)
+    await db_session.commit()
+    await db_session.refresh(user)
+    assert user.is_professional is True, "The user's professional status should be updated to True."
+    assert user.professional_status_updated_at is not None, "The professional status updated timestamp should not be None."
