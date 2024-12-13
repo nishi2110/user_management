@@ -53,7 +53,6 @@ jobs:
   build-and-push-docker:
     needs: test
     runs-on: ubuntu-latest
-    environment: production
     steps:
       - uses: actions/checkout@v4
       
@@ -70,8 +69,8 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           push: true
-          tags: saideepak9676/finalprojecti:${{ github.sha }} # Uses the Git SHA for tagging
-          platforms: linux/amd64,linux/arm64 # Multi-platform support
+          tags: saideepak9676/finalproject:${{ github.sha }}
+          platforms: linux/amd64,linux/arm64
           cache-from: type=registry,ref=saideepak9676/finalproject:cache
           cache-to: type=inline,mode=max
           
