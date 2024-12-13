@@ -15,6 +15,11 @@ from uuid import UUID
 from app.services.email_service import EmailService
 from app.models.user_model import UserRole
 import logging
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
+from sqlalchemy.orm import selectinload
+from sqlalchemy import or_
+
 
 settings = get_settings()
 logger = logging.getLogger(__name__)
@@ -33,12 +38,23 @@ class UserService:
 
     @classmethod
     async def _fetch_user(cls, session: AsyncSession, **filters) -> Optional[User]:
-        query = select(User).filter_by(**filters)
-        result = await cls._execute_query(session, query)
-        return result.scalars().first() if result else None
+        try:
+            query = select(User).filter_by(**filters)
+            logger.debug(f"Executing query to fetch user with filters: {filters}")
+            result = await cls._execute_query(session, query)
+            user = result.scalars().first() if result else None
+            if user:
+                logger.debug(f"User found: {user}")
+            else:
+                logger.warning(f"No user found with filters: {filters}")
+            return user
+        except Exception as e:
+            logger.error(f"Error fetching user with filters {filters}: {e}")
+            return None
 
     @classmethod
     async def get_by_id(cls, session: AsyncSession, user_id: UUID) -> Optional[User]:
+        logger.debug(f"Fetching user with ID: {user_id}")
         return await cls._fetch_user(session, id=user_id)
 
     @classmethod
@@ -69,12 +85,11 @@ class UserService:
             if new_user.role == UserRole.ADMIN:
                 new_user.email_verified = True
 
-            else:
-                new_user.verification_token = generate_verification_token()
-                await email_service.send_verification_email(new_user)
-
+            new_user.verification_token = generate_verification_token()
             session.add(new_user)
             await session.commit()
+            await email_service.send_verification_email(new_user)
+
             return new_user
         except ValidationError as e:
             logger.error(f"Validation error during user creation: {e}")
@@ -170,11 +185,25 @@ class UserService:
         if user and user.verification_token == token:
             user.email_verified = True
             user.verification_token = None  # Clear the token once used
-            user.role = UserRole.AUTHENTICATED
+            if user.role == UserRole.ANONYMOUS:
+                user.role = UserRole.AUTHENTICATED
             session.add(user)
             await session.commit()
             return True
         return False
+    
+    @classmethod
+    async def search_by_param(cls, session: AsyncSession, user_id: UUID, nickname: str
+                              ,first_name:str, last_name:str ) -> bool:
+        user = await cls.get_by_id(session, user_id)
+        if user and user.nickname == nickname:
+            return user
+        if user and user.first_name == first_name:
+            return user
+        if user and user.last_name == last_name:
+            return user
+        return False
+
 
     @classmethod
     async def count(cls, session: AsyncSession) -> int:
@@ -199,3 +228,32 @@ class UserService:
             await session.commit()
             return True
         return False
+    
+
+    @staticmethod
+    async def search_users_by_query(
+        db: AsyncSession,
+        query: str
+    ):
+        """
+        Searches for users by username, email, or role based on the provided query.
+        Args:
+            db: The database session.
+            query: The search query.
+        Returns:
+            List of users that match the search query.
+        """
+        # Query for users with a matching username, email, or role
+        stmt = select(User).filter(
+            or_(
+                User.username.ilike(f"%{query}%"),  # Username match
+                User.email.ilike(f"%{query}%"),     # Email match
+                User.role.ilike(f"%{query}%")       # Role match
+            )
+        )
+        
+        # Execute the query
+        result = await db.execute(stmt)
+        users = result.scalars().all()  # Get all users that match the query
+        
+        return users
