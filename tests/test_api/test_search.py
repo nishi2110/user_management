@@ -7,19 +7,28 @@ from app.services.jwt_service import decode_token  # Corrected import for decode
 from app.utils.nickname_gen import generate_nickname  # If you use generated nicknames in tests
 
 @pytest.mark.asyncio
-async def test_search_users_by_email_partial_match(async_client: AsyncClient, admin_token):
-    # Search by email substring
+async def test_search_users_by_email_success(async_client: AsyncClient, admin_token, preload_user_with_email):
     response = await async_client.get(
         "/users/search",
-        params={"column": "email", "value": "john.doe"},
+        params={"column": "email", "value": "alex.ross@example.com"},
         headers={"Authorization": f"Bearer {admin_token}"}
     )
     assert response.status_code == 200
     data = response.json()
-    assert data["total"] > 0  # At least one result
-    # Check if any item in the response matches the partial value
-    assert any("john.doe" in user["email"] for user in data["items"])
-    #data["items"][0]["email"] == "john.doe@example.com"
+    assert data["total"] == 1
+    assert data["items"][0]["email"] == "alex.ross@example.com"
+
+@pytest.mark.asyncio
+async def test_search_users_by_first_name_success(async_client: AsyncClient, admin_token):
+    response = await async_client.get(
+        "/users/search",
+        params={"column": "first_name", "value": "John"},
+        headers={"Authorization": f"Bearer {admin_token}"}
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert data["total"] > 0  # Ensure some users are returned
+    assert any(user["first_name"] == "John" for user in data["items"])
 
 
 @pytest.mark.asyncio
@@ -109,14 +118,13 @@ async def test_search_users_invalid_value(async_client: AsyncClient, admin_token
     assert response.json()["detail"] == "No users found"
 
 @pytest.mark.asyncio
-async def test_search_users_multiple_results(async_client: AsyncClient, admin_token):
+async def test_search_users_multiple_results(async_client: AsyncClient, admin_token, preload_users_with_same_last_name):
     response = await async_client.get(
         "/users/search",
-        params={"column": "last_name", "value": "Doe"},
+        params={"column": "last_name", "value": "Smith"},
         headers={"Authorization": f"Bearer {admin_token}"}
     )
     assert response.status_code == 200
     data = response.json()
-    assert data["total"] > 1  # Ensure multiple users are returned
-    assert all(user["last_name"] == "Doe" for user in data["items"])
-# Note: Make sure fixtures like admin_token, expired_admin_token, etc., are defined in your conftest.py file.
+    assert data["total"] > 1
+    assert all(user["last_name"] == "Smith" for user in data["items"])

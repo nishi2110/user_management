@@ -36,6 +36,7 @@ from app.utils.security import hash_password
 from app.utils.template_manager import TemplateManager
 from app.services.email_service import EmailService
 from app.services.jwt_service import create_access_token
+import os
 
 fake = Faker()
 
@@ -244,3 +245,40 @@ def email_service():
         mock_service.send_verification_email.return_value = None
         mock_service.send_user_email.return_value = None
         return mock_service
+
+@pytest.fixture
+async def preload_user_with_email(db_session: AsyncSession):
+    user_data = {
+        "nickname": "alex_ross",
+        "first_name": "Alex",
+        "last_name": "Ross",
+        "email": "alex.ross@example.com",
+        "hashed_password": hash_password("SecurePassword$9876"),
+        "role": UserRole.AUTHENTICATED,
+        "email_verified": True,
+        "is_locked": False,
+    }
+    user = User(**user_data)
+    db_session.add(user)
+    await db_session.commit()
+    return user
+
+@pytest.fixture(scope="function")
+async def preload_users_with_same_last_name(db_session: AsyncSession):
+    users = []
+    for i in range(5):  # Creates 5 users with the last name "Smith"
+        user_data = {
+            "nickname": f"smith_user_{i}",
+            "first_name": f"Chris_{i}",
+            "last_name": "Smith",
+            "email": f"chris{i}.smith@example.com",
+            "hashed_password": hash_password("AnotherPassword$5678"),
+            "role": UserRole.AUTHENTICATED,
+            "email_verified": True,
+            "is_locked": False,
+        }
+        user = User(**user_data)
+        db_session.add(user)
+        users.append(user)
+    await db_session.commit()
+    return users
