@@ -1,4 +1,3 @@
-# app/security.py
 from builtins import Exception, ValueError, bool, int, str
 import secrets
 import bcrypt
@@ -49,5 +48,31 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
         logger.error("Error verifying password: %s", e)
         raise ValueError("Authentication process encountered an unexpected error") from e
 
-def generate_verification_token():
-    return secrets.token_urlsafe(16)  # Generates a secure 16-byte URL-safe token
+def validate_password(password: str) -> bool:
+    """
+    Validates a password based on certain rules (e.g., length, complexity).
+    
+    Args:
+        password (str): The plain text password to validate.
+
+    Returns:
+        bool: True if the password meets the requirements, False otherwise.
+    """
+    if len(password) < 8:
+        return False  # Minimum length requirement
+    if not any(char.isdigit() for char in password):
+        return False  # Must include at least one digit
+    if not any(char.isalpha() for char in password):
+        return False  # Must include at least one letter
+    if not any(char in "!@#$%^&*()_+-=[]{};':\",.<>?/\\|`~" for char in password):
+        return False  # Must include at least one special character
+    return True
+
+def generate_verification_token() -> str:
+    """
+    Generates a secure 16-byte URL-safe token.
+
+    Returns:
+        str: A URL-safe random token.
+    """
+    return secrets.token_urlsafe(16)
