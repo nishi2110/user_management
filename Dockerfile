@@ -1,18 +1,14 @@
-# Define a base stage with a Debian Bookworm base image
+# Stage 1: Build stage
 FROM python:3.12-bookworm as base
 
-# Set environment variables
 ENV PYTHONUNBUFFERED=1 \
     PYTHONFAULTHANDLER=1 \
     PIP_NO_CACHE_DIR=true \
     PIP_DEFAULT_TIMEOUT=100 \
-    PIP_DISABLE_PIP_VERSION_CHECK=on \
-    QR_CODE_DIR=/myapp/qr_codes
+    PIP_DISABLE_PIP_VERSION_CHECK=on
 
-# Set the working directory
 WORKDIR /myapp
 
-# Update and install system dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc \
     libpq-dev \
@@ -20,43 +16,32 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements file and install Python dependencies in /.venv
 COPY requirements.txt .
 RUN python -m venv /.venv \
     && . /.venv/bin/activate \
     && pip install --upgrade pip \
     && pip install -r requirements.txt
 
-# Define a second stage for the runtime, using the same Debian Bookworm slim image
+# Stage 2: Final runtime stage
 FROM python:3.12-slim-bookworm as final
 
-# Install runtime dependencies and clean up
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libc-bin \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy the virtual environment from the base stage
 COPY --from=base /.venv /.venv
 
-# Set environment variables
 ENV PATH="/.venv/bin:$PATH" \
     PYTHONUNBUFFERED=1 \
-    PYTHONFAULTHANDLER=1 \
-    QR_CODE_DIR=/myapp/qr_codes
+    PYTHONFAULTHANDLER=1
 
-# Set the working directory
 WORKDIR /myapp
 
-# Create and switch to a non-root user
-RUN useradd -m myuser
-USER myuser
+COPY . .
 
-# Copy application code with appropriate ownership
-COPY --chown=myuser:myuser . .
+USER nobody
 
-# Inform Docker that the container listens on the specified port at runtime
 EXPOSE 8000
 
-# Use ENTRYPOINT to specify the executable when the container starts
-ENTRYPOINT ["uvicorn", "app.main:app", "--reload", "--host", "0.0.0.0", "--port", "8000"]
+ENTRYPOINT ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
