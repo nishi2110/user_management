@@ -8,10 +8,10 @@
 2. Clone the repository to your local machine: Clone the forked repository to our local machine using the git clone command. This    
    creates a local copy of the repository on our computer, enabling we make changes and run the project locally.
 
-   '''git clone git@github.com:nisha2110/IS601_final_user_management.git
+   ```git clone git@github.com:nisha2110/IS601_final_user_management.git ```
 
 # Change directory to the project
- '''cd IS601_final_user_management and open code in  vistual studio write cmd: code .
+ ``` cd IS601_final_user_management and open code in  vistual studio write cmd: code . ``` 
 
 # Install and Setup Docker [compulsory]
 
@@ -48,4 +48,24 @@
     - The email is now sent only once, when the user is either created or updated in the database.
     - The code has been updated to ensure that the correct User ID is passed and displayed in the email verification, eliminating the  
       issue of None being shown.  
+    
+    4. Nickname Assign and Uniqueness in User Registration: [Issue-4 Link](https://github.com/nisha2110/IS601_final_user_management/issues/7)
+    - Removed the call to the generate_nickname() function when assigning a new user's nickname.
+    - Instead, the nickname is now directly set using the provided user data (user_data["nickname"]).
+    - The system checks for uniqueness of the provided nickname in the database. 
+
+    5. Password Validation in User Registration: [Issue-5 Link](https://github.com/nisha2110/IS601_final_user_management/issues/9)
+    -  The implementation of password validation logic used during user registration to ensure strong and secure passwords.
+   
+    - Key Features of the Validation:
+      1. Minimum Length Requirement:
+        - Passwords must be at least 8 characters long.
+      2. Uppercase Letter Check:
+        - Passwords must include at least one uppercase letter (A-Z).
+      3. Lowercase Letter Check:
+        - Passwords must include at least one lowercase letter (a-z).
+      4. Digit Check:
+        - Passwords must include at least one numeric digit (0-9).
+      5. Special Character Requirement:
+        - Passwords must contain at least one special character from the set !@#$%^&*(),.?":{}|<>.
 
