@@ -33,9 +33,89 @@ from app.services.jwt_service import create_access_token
 from app.utils.link_generation import create_user_links, generate_pagination_links
 from app.dependencies import get_settings
 from app.services.email_service import EmailService
+from sqlalchemy.sql import text
+from sqlalchemy import select, or_
+from sqlalchemy.ext.asyncio import AsyncSession
+from app.models.user_model import User
+
 router = APIRouter()
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 settings = get_settings()
+
+
+@router.get("/users/search", response_model=UserListResponse, name="search_users", tags=["User Management Requires (Admin or Manager Roles)"])
+async def search_users(
+    column: str,
+    value: str,
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+    current_user: dict = Depends(require_role(["ADMIN", "MANAGER"])),
+):
+    """
+    Search users by a specific column and value.
+
+    Args:
+        column: The column to filter by (e.g., 'email').
+        value: The value to search for in the specified column.
+        request: The request object, used to generate HATEOAS links.
+        db: Dependency that provides an AsyncSession for database access.
+    """
+    # Define allowed columns to prevent SQL injection
+    allowed_columns = {
+        "nickname": User.nickname,
+        "email": User.email,
+        "first_name": User.first_name,
+        "last_name": User.last_name,
+        "role": User.role,
+        "created_at": User.created_at,
+        "updated_at": User.updated_at,
+    }
+
+    # Validate the column
+    if column not in allowed_columns:
+        raise HTTPException(status_code=400, detail=f"Invalid column: {column}")
+
+    # Build the SQLAlchemy filter dynamically
+    column_filter = allowed_columns[column].ilike(f"%{value}%")
+    query = select(User).where(column_filter)
+    result = await db.execute(query)
+    users = result.scalars().all()
+
+    # Check if users are found
+    if not users:
+        raise HTTPException(status_code=404, detail="No users found")
+
+    # Map the results to the response model
+    user_responses = [
+        UserResponse.model_construct(
+            id=user.id,
+            nickname=user.nickname,
+            first_name=user.first_name,
+            last_name=user.last_name,
+            bio=user.bio,
+            profile_picture_url=user.profile_picture_url,
+            github_profile_url=user.github_profile_url,
+            linkedin_profile_url=user.linkedin_profile_url,
+            role=user.role,
+            email=user.email,
+            last_login_at=user.last_login_at,
+            created_at=user.created_at,
+            updated_at=user.updated_at,
+            links=create_user_links(user.id, request)
+        )
+        for user in users
+    ]
+
+    # Construct the response
+    return UserListResponse(
+        items=user_responses,
+        total=len(user_responses),
+        page=1,  # You can modify for dynamic pagination later
+        size=len(user_responses),
+        links=[],  # Include navigational links if required
+    )
+
+
 @router.get("/users/{user_id}", response_model=UserResponse, name="get_user", tags=["User Management Requires (Admin or Manager Roles)"])
 async def get_user(user_id: UUID, request: Request, db: AsyncSession = Depends(get_db), token: str = Depends(oauth2_scheme), current_user: dict = Depends(require_role(["ADMIN", "MANAGER"]))):
     """
@@ -105,7 +185,8 @@ async def update_user(user_id: UUID, user_update: UserUpdate, request: Request, 
         linkedin_profile_url=updated_user.linkedin_profile_url,
         created_at=updated_user.created_at,
         updated_at=updated_user.updated_at,
-        links=create_user_links(updated_user.id, request)
+        links=create_user_links(updated_user.id, request),
+        is_prefessional=updated_user.is_professional #another issue #4
     )
 
 
