@@ -1,7 +1,17 @@
 # test_security.py
 from builtins import RuntimeError, ValueError, isinstance, str
 import pytest
+from app.schemas.user_schemas import validate_password
 from app.utils.security import hash_password, verify_password
+
+def test_password_strength():
+    """Test pasword strength"""
+    weak_passwords = ["ajvcsiyi", "1234", "achsg1234", "acsdh@12340", "Achs@12"]
+    strong_passwords = ["Acbs@4764", "sdbj%89D", "Secure@1890", "sdg@@Es4", "AD.123fjh"]
+    for strong, weak in zip(strong_passwords, weak_passwords):
+        validate_password(strong)
+        with pytest.raises(ValueError):
+            validate_password(weak)
 
 def test_hash_password():
     """Test that hashing password returns a bcrypt hashed string."""

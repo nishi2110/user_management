@@ -8,7 +8,6 @@ import re
 from app.models.user_model import UserRole
 from app.utils.nickname_gen import generate_nickname
 
-
 def validate_url(url: Optional[str]) -> Optional[str]:
     if url is None:
         return url
@@ -16,6 +15,12 @@ def validate_url(url: Optional[str]) -> Optional[str]:
     if not re.match(url_regex, url):
         raise ValueError('Invalid URL format')
     return url
+
+def validate_password(password: Optional[str]) -> Optional[str]:
+    password_regex = r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*.])[A-Za-z\d!@#$%^&*.]{8,}$'
+    if not re.match(password_regex, password):
+        raise ValueError('Invalid password: must be at least 8 characters long, contain upper and lower case letters, and include at least 1 number and special characters.')
+    return password
 
 class UserBase(BaseModel):
     email: EmailStr = Field(..., example="john.doe@example.com")
@@ -36,6 +41,8 @@ class UserBase(BaseModel):
 class UserCreate(UserBase):
     email: EmailStr = Field(..., example="john.doe@example.com")
     password: str = Field(..., example="Secure*1234")
+
+    _validate_password = validator('password', pre=True, allow_reuse=True)(validate_password)
 
 class UserUpdate(UserBase):
     email: Optional[EmailStr] = Field(None, example="john.doe@example.com")
