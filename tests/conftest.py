@@ -36,6 +36,7 @@ from app.utils.security import hash_password
 from app.utils.template_manager import TemplateManager
 from app.services.email_service import EmailService
 from app.services.jwt_service import create_access_token
+from app.utils.nickname_gen import generate_nickname
 
 fake = Faker()
 
@@ -165,7 +166,7 @@ async def users_with_same_role_50_users(db_session):
     users = []
     for _ in range(50):
         user_data = {
-            "nickname": fake.user_name(),
+            "nickname": generate_nickname(),
             "first_name": fake.first_name(),
             "last_name": fake.last_name(),
             "email": fake.email(),
