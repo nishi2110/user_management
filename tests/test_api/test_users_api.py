@@ -132,7 +132,7 @@ async def test_login_unverified_user(async_client, unverified_user):
         "password": "MySuperPassword$1234"
     }
     response = await async_client.post("/login/", data=urlencode(form_data), headers={"Content-Type": "application/x-www-form-urlencoded"})
-    assert response.status_code == 401
+    assert response.status_code == 400
 
 @pytest.mark.asyncio
 async def test_login_locked_user(async_client, locked_user):

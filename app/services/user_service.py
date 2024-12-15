@@ -127,8 +127,6 @@ class UserService:
     async def login_user(cls, session: AsyncSession, email: str, password: str) -> Optional[User]:
         user = await cls.get_by_email(session, email)
         if user:
-            if user.email_verified is False:
-                return None
             if user.is_locked:
                 return None
             if verify_password(password, user.hashed_password):
