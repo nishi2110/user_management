@@ -81,6 +81,16 @@ async def test_create_user_invalid_email(async_client):
     response = await async_client.post("/register/", json=user_data)
     assert response.status_code == 422
 
+@pytest.mark.asyncio
+async def test_create_user_weak_password(async_client):
+    user_data = {
+        "email": "notanemail@example.com",
+        "password": "abcdst234",
+    }
+    response = await async_client.post("/register/", json=user_data)
+    assert response.status_code == 422
+    assert "Value error, Invalid password:" in response.json().get("detail", "")[1].get("msg", "")
+
 import pytest
 from app.services.jwt_service import decode_token
 from urllib.parse import urlencode
