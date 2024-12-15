@@ -4,6 +4,7 @@ import secrets
 from typing import Optional, Dict, List
 from pydantic import ValidationError
 from sqlalchemy import func, null, update, select
+from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.dependencies import get_email_service, get_settings
@@ -17,7 +18,14 @@ from app.models.user_model import UserRole
 import logging
 
 settings = get_settings()
+
 logger = logging.getLogger(__name__)
+
+DB_ADMIN = User(nickname=settings.admin_user,
+                email=settings.admin_email,
+                hashed_password=hash_password(settings.admin_password),
+                role=UserRole.ADMIN,
+                email_verified=True)
 
 class UserService:
     @classmethod
@@ -63,11 +71,6 @@ class UserService:
             while await cls.get_by_nickname(session, new_nickname):
                 new_nickname = generate_nickname()
             new_user.nickname = new_nickname
-            logger.info(f"User Role: {new_user.role}")
-            user_count = await cls.count(session)
-            new_user.role = UserRole.ADMIN if user_count == 0 else UserRole.ANONYMOUS            
-            if new_user.role == UserRole.ADMIN:
-                new_user.email_verified = True
             new_user.verification_token = generate_verification_token()            
             session.add(new_user)
             await session.commit()
@@ -167,7 +170,8 @@ class UserService:
         if user and user.verification_token == token:
             user.email_verified = True
             user.verification_token = None  # Clear the token once used
-            user.role = UserRole.AUTHENTICATED
+            if user.role == UserRole.ANONYMOUS:
+                user.role = UserRole.AUTHENTICATED
             session.add(user)
             await session.commit()
             return True
@@ -196,3 +200,17 @@ class UserService:
             await session.commit()
             return True
         return False
+    
+    @classmethod
+    async def create_default_db_admin(cls, session: AsyncSession):
+        admin = await cls.get_by_email(session, DB_ADMIN.email)
+        if not admin:
+            session.add(DB_ADMIN)
+            await session.commit()
+            logger.info("Default admin created!")
+    
+    @classmethod
+    def create_default_db_admin_sync(cls, session: Session):
+        session.add(DB_ADMIN)
+        session.commit()
+        logger.info("Default admin created in alembic upgrade!")

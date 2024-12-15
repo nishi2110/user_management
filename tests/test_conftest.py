@@ -6,7 +6,21 @@ from httpx import AsyncClient
 from sqlalchemy.future import select
 
 from app.models.user_model import User, UserRole
+from app.services.user_service import UserService
 from app.utils.security import verify_password
+from app.dependencies import get_settings
+
+settings = get_settings()
+
+@pytest.mark.asyncio
+async def test_default_db_admin_creation(db_session):
+    """Query the database to check if the default db_admin creation works"""
+    await UserService.create_default_db_admin(db_session)
+    result = await db_session.execute(select(User).filter_by(email=settings.admin_email))
+    stored_user = result.scalars().first()
+    assert stored_user is not None
+    assert stored_user.role == UserRole.ADMIN
+    assert verify_password(settings.admin_password, stored_user.hashed_password)
 
 @pytest.mark.asyncio
 async def test_user_creation(db_session, verified_user):

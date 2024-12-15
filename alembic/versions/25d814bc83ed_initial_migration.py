@@ -9,6 +9,8 @@ from typing import Sequence, Union
 
 from alembic import op
 import sqlalchemy as sa
+from sqlalchemy.orm import Session
+from app.services.user_service import UserService
 
 
 # revision identifiers, used by Alembic.
@@ -30,7 +32,7 @@ def upgrade() -> None:
     sa.Column('profile_picture_url', sa.String(length=255), nullable=True),
     sa.Column('linkedin_profile_url', sa.String(length=255), nullable=True),
     sa.Column('github_profile_url', sa.String(length=255), nullable=True),
-    sa.Column('role', sa.Enum('ANONYMOUS', 'AUTHENTICATED', 'MANAGER', 'ADMIN', name='UserRole', create_constraint=True), nullable=False),
+    sa.Column('role', sa.Enum('ANONYMOUS', 'AUTHENTICATED', 'MANAGER', 'ADMIN', name='UserRole', create_constraint=True), default='ANONYMOUS', nullable=False),
     sa.Column('is_professional', sa.Boolean(), nullable=True),
     sa.Column('professional_status_updated_at', sa.DateTime(timezone=True), nullable=True),
     sa.Column('last_login_at', sa.DateTime(timezone=True), nullable=True),
@@ -45,6 +47,9 @@ def upgrade() -> None:
     )
     op.create_index(op.f('ix_users_email'), 'users', ['email'], unique=True)
     op.create_index(op.f('ix_users_nickname'), 'users', ['nickname'], unique=True)
+    bind = op.get_bind()
+    session = Session(bind)
+    UserService.create_default_db_admin_sync(session)
     # ### end Alembic commands ###
 
 
