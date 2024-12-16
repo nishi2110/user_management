@@ -62,8 +62,8 @@ jobs:
      
       - name: Run tests with Pytest
         env:
-          MINIO_ROOT_USER: admin
-          MINIO_ROOT_PASSWORD: password
+          MINIO_ROOT_USER: minoadmin
+          MINIO_ROOT_PASSWORD: minioadmin
           DATABASE_URL: postgresql+asyncpg://user:password@localhost:5432/myappdb
           MINIO_URL: localhost:9000
         run: pytest
