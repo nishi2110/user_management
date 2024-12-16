@@ -200,37 +200,42 @@ class UserService:
             return True
         return False
 
-    @staticmethod
-    async def update_profile(db: AsyncSession, user_id: UUID, profile_data: dict) -> Optional[User]:
+    @classmethod
+    async def update_profile(cls, session: AsyncSession, user_id: UUID, profile_data: dict) -> Optional[User]:
         """Update user profile information"""
         try:
-            result = await db.execute(select(User).filter(User.id == user_id))
-            user = result.scalars().first()
+            user = await cls.get_by_id(session, user_id)
             if not user:
                 return None
             
-            for key, value in profile_data.items():
+            # Only update allowed fields
+            allowed_fields = {'first_name', 'last_name', 'bio', 'profile_picture_url', 
+                            'github_profile_url', 'linkedin_profile_url'}
+            filtered_data = {k: v for k, v in profile_data.items() if k in allowed_fields}
+            
+            for key, value in filtered_data.items():
                 setattr(user, key, value)
             
-            await db.commit()
+            session.add(user)
+            await session.commit()
             return user
         except Exception as e:
-            await db.rollback()
+            await session.rollback()
             raise e
 
-    @staticmethod
-    async def update_professional_status(db: AsyncSession, user_id: UUID, status: bool) -> Optional[User]:
+    @classmethod
+    async def update_professional_status(cls, session: AsyncSession, user_id: UUID, status: bool) -> Optional[User]:
         """Update user's professional status"""
         try:
-            result = await db.execute(select(User).filter(User.id == user_id))
-            user = result.scalars().first()
+            user = await cls.get_by_id(session, user_id)
             if not user:
                 return None
             
             user.is_professional = status
             user.professional_status_updated_at = func.now()
-            await db.commit()
+            session.add(user)
+            await session.commit()
             return user
         except Exception as e:
-            await db.rollback()
+            await session.rollback()
             raise e
