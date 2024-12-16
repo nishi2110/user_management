@@ -38,3 +38,15 @@
 2.	**Length Validation:** Both minimum and maximum lengths are not declared.
 
 **Code Fix:** [Click Here](https://github.com/kaw393939/user_management/commit/bd85389f5f3458d860e752c9582cba2ce9d98977)
+
+## Issue 4
+
+**Issue:** Validate URLs and Profile Picture
+
+**Details:** The issue details are following:
+
+1.	**URL validation:** HttpUrl has not been used in all URLs.
+2.	**Validate Image File Format in Profile Picture:** The image file is not restricted to commonly used picture formats.
+
+
+**Code Fix:** [Click Here](https://github.com/kaw393939/user_management/commit/a228722694f51876289a584e504344164a77647e)
