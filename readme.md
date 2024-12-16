@@ -10,7 +10,7 @@
 
 **Details:** The issue details are following:
 
-1. **Format Validation of Email:** The `EmailStr` type from `Pydantic` class ensures the email is in a valid format (e.g., test@domain. com). But, using patterns like “admin” is not restricted.
+1. **Format Validation of Email:** The `EmailStr` type from `Pydantic` class ensures the email is in a valid format (e.g., test@domain. com). But, using patterns like `admin` is not restricted.
 2. **Configurable Domains:** There is no dynamic use of a set of domains from email providers.
 3. **Consistent Checking:** Converts usernames and domains into lowercase, but does not check consistently.
 4. **Error Handing:** There is no such handing of errors with actionable feedback if validation fails.
