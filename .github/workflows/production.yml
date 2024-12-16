@@ -56,16 +56,16 @@ jobs:
       - name: Wait for MinIO
         run: |
           for i in {1..10}; do
-            curl -f http://localhost:9000/minio/health/live && break || sleep 5;
+            curl -f -v  http://localhost:9000/minio/health/live && break || sleep 5;
           done
         
      
       - name: Run tests with Pytest
         env:
-          MINIO_ROOT_USER: minoadmin
+          MINIO_ROOT_USER: minioadmin
           MINIO_ROOT_PASSWORD: minioadmin
           DATABASE_URL: postgresql+asyncpg://user:password@localhost:5432/myappdb
-          MINIO_URL: localhost:9000
+          MINIO_URL: minio:9000
         run: pytest
 
   build-and-push-docker:
