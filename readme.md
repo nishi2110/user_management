@@ -1,3 +1,3 @@
-# The User Management System Final Project
+# Final Project: User Management System 
 
 ## Issues and Fixes
