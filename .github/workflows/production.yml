@@ -66,6 +66,8 @@ jobs:
           MINIO_ROOT_PASSWORD: minioadmin
           DATABASE_URL: postgresql+asyncpg://user:password@localhost:5432/myappdb
           MINIO_URL: minio:9000
+          MINIO_ACCESS_KEY: minioadmin # Ensure this matches the root user
+          MINIO_SECRET_KEY: minioadmin # Ensure this matches the root password
         run: pytest
 
   build-and-push-docker:
