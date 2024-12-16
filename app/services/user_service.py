@@ -57,18 +57,20 @@ class UserService:
             if existing_user:
                 logger.error("User with given email already exists.")
                 return None
+            
             validated_data['hashed_password'] = hash_password(validated_data.pop('password'))
-            new_user = User(**validated_data)
+
             new_nickname = generate_nickname()
             while await cls.get_by_nickname(session, new_nickname):
                 new_nickname = generate_nickname()
-            new_user.nickname = new_nickname
-            logger.info(f"User Role: {new_user.role}")
+            validated_data['nickname'] = new_nickname
+
             user_count = await cls.count(session)
-            new_user.role = UserRole.ADMIN if user_count == 0 else UserRole.ANONYMOUS            
+            validated_data['role'] = UserRole.ADMIN if user_count == 0 else UserRole.ANONYMOUS
+
+            new_user = User(**validated_data)
             if new_user.role == UserRole.ADMIN:
                 new_user.email_verified = True
-
             else:
                 new_user.verification_token = generate_verification_token()
                 await email_service.send_verification_email(new_user)
@@ -76,9 +78,21 @@ class UserService:
             session.add(new_user)
             await session.commit()
             return new_user
-        except ValidationError as e:
-            logger.error(f"Validation error during user creation: {e}")
+
+        except ValidationError as ve:
+            logger.error(f"Validation error: {ve}")
             return None
+
+        except SQLAlchemyError as sqle:
+            logger.error(f"Database error during user creation: {sqle}")
+            await session.rollback()
+            return None
+
+        except Exception as e:
+            logger.error(f"Unexpected error during user creation: {e}")
+            await session.rollback()
+            raise
+
 
     @classmethod
     async def update(cls, session: AsyncSession, user_id: UUID, update_data: Dict[str, str]) -> Optional[User]:
