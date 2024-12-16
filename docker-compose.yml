@@ -33,10 +33,9 @@ services:
   fastapi:
     build: .
     volumes:
-      - ./:/myapp/
+      - .:/app
     depends_on:
-      postgres:
-        condition: service_healthy
+      - postgres
     networks:
       - app-network
 
@@ -45,7 +44,7 @@ services:
     ports:
       - "80:80"
     volumes:
-      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
     depends_on:
       - fastapi
     networks:

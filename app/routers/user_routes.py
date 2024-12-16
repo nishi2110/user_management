@@ -245,3 +245,77 @@ async def verify_email(user_id: UUID, token: str, db: AsyncSession = Depends(get
     if await UserService.verify_email_with_token(db, user_id, token):
         return {"message": "Email verified successfully"}
     raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid or expired verification token")
+
+@router.put("/users/{user_id}/profile", response_model=UserResponse, tags=["User Profile Management"])
+async def update_profile(
+    user_id: UUID,
+    profile_update: UserUpdate,
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+    current_user: dict = Depends(get_current_user)
+):
+    """Update user's own profile information."""
+    # Check if user is updating their own profile or has admin/manager rights
+    if current_user.get("role") not in ["ADMIN", "MANAGER"] and str(user_id) != str(current_user.get("id")):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Can only update your own profile"
+        )
+    
+    user_data = profile_update.model_dump(exclude_unset=True)
+    updated_user = await UserService.update_profile(db, user_id, user_data)
+    if not updated_user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+    
+    return UserResponse.model_construct(
+        id=updated_user.id,
+        nickname=updated_user.nickname,
+        email=updated_user.email,
+        first_name=updated_user.first_name,
+        last_name=updated_user.last_name,
+        bio=updated_user.bio,
+        profile_picture_url=updated_user.profile_picture_url,
+        github_profile_url=updated_user.github_profile_url,
+        linkedin_profile_url=updated_user.linkedin_profile_url,
+        role=updated_user.role,
+        is_professional=updated_user.is_professional,
+        links=create_user_links(updated_user.id, request)
+    )
+
+@router.put("/users/{user_id}/professional-status", response_model=UserResponse, tags=["User Profile Management"])
+async def update_professional_status(
+    user_id: UUID,
+    status: bool,
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+    current_user: dict = Depends(require_role(["ADMIN", "MANAGER"])),
+    email_service: EmailService = Depends(get_email_service)
+):
+    """
+    Update user's professional status. Only available to admins and managers.
+    """
+    user = await UserService.update_professional_status(db, user_id, status)
+    if not user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+    
+    # Send notification email
+    await email_service.send_user_email(
+        user.email,
+        "Professional Status Update",
+        f"Your professional status has been {'upgraded' if status else 'downgraded'}."
+    )
+    
+    return UserResponse.model_construct(
+        id=user.id,
+        nickname=user.nickname,
+        email=user.email,
+        first_name=user.first_name,
+        last_name=user.last_name,
+        bio=user.bio,
+        profile_picture_url=user.profile_picture_url,
+        github_profile_url=user.github_profile_url,
+        linkedin_profile_url=user.linkedin_profile_url,
+        role=user.role,
+        is_professional=user.is_professional,
+        links=create_user_links(user.id, request)
+    )

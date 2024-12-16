@@ -199,3 +199,38 @@ class UserService:
             await session.commit()
             return True
         return False
+
+    @staticmethod
+    async def update_profile(db: AsyncSession, user_id: UUID, profile_data: dict) -> Optional[User]:
+        """Update user profile information"""
+        try:
+            result = await db.execute(select(User).filter(User.id == user_id))
+            user = result.scalars().first()
+            if not user:
+                return None
+            
+            for key, value in profile_data.items():
+                setattr(user, key, value)
+            
+            await db.commit()
+            return user
+        except Exception as e:
+            await db.rollback()
+            raise e
+
+    @staticmethod
+    async def update_professional_status(db: AsyncSession, user_id: UUID, status: bool) -> Optional[User]:
+        """Update user's professional status"""
+        try:
+            result = await db.execute(select(User).filter(User.id == user_id))
+            user = result.scalars().first()
+            if not user:
+                return None
+            
+            user.is_professional = status
+            user.professional_status_updated_at = func.now()
+            await db.commit()
+            return user
+        except Exception as e:
+            await db.rollback()
+            raise e
