@@ -4,7 +4,7 @@
 
 ## Issues and Fixes
 
-### Issue 1
+## Issue 1
 
 **Issue:** Email verification in user creation
 
@@ -17,7 +17,7 @@
 
 **Code Fix:** [Click Here](https://github.com/kaw393939/user_management/commit/c9b3ccf8e8c190d7c3f7c3016a2155b18fc027db)
 
-### Issue 2
+## Issue 2
 
 **Issue:** Password verification in user creation
 
