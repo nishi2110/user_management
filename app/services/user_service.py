@@ -79,6 +79,7 @@ class UserService:
                 new_user.email_verified = True
             else:
                 new_user.verification_token = generate_verification_token()
+                new_user.verification_token_expiry = datetime.utcnow() + timedelta(hours=24)  # Set 24-hour expiry
                 await email_service.send_verification_email(new_user)
 
             session.add(new_user)
@@ -97,7 +98,7 @@ class UserService:
         except Exception as e:
             logger.error(f"Unexpected error during user creation: {e}")
             await session.rollback()
-            raise 
+            raise
 
 
 
@@ -178,8 +179,8 @@ class UserService:
         user = await cls.get_by_id(session, user_id)
         if user:
             user.hashed_password = hashed_password
-            user.failed_login_attempts = 0  # Resetting failed login attempts
-            user.is_locked = False  # Unlocking the user account, if locked
+            user.failed_login_attempts = 0  
+            user.is_locked = False  
             session.add(user)
             await session.commit()
             return True
@@ -188,14 +189,26 @@ class UserService:
     @classmethod
     async def verify_email_with_token(cls, session: AsyncSession, user_id: UUID, token: str) -> bool:
         user = await cls.get_by_id(session, user_id)
-        if user and user.verification_token == token:
-            user.email_verified = True
-            user.verification_token = None  # Clear the token once used
-            user.role = UserRole.AUTHENTICATED
-            session.add(user)
-            await session.commit()
-            return True
-        return False
+        if not user:
+            logger.error(f"User with ID {user_id} not found.")
+            return False
+
+        if user.verification_token != token:
+            logger.error("Invalid verification token.")
+            return False
+
+        if user.verification_token_expiry and datetime.utcnow() > user.verification_token_expiry:
+            logger.error("Verification token has expired.")
+            return False
+
+        user.email_verified = True
+        user.verification_token = None  
+        user.verification_token_expiry = None 
+        user.role = UserRole.AUTHENTICATED
+        session.add(user)
+        await session.commit()
+        return True
+
 
     @classmethod
     async def count(cls, session: AsyncSession) -> int:
