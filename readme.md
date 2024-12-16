@@ -45,7 +45,7 @@
 
 **Details:** The issue details are following:
 
-1.	**URL validation:** HttpUrl has not been used in all URLs.
+1.	**URL validation:** `HttpUrl` has not been used in all URLs.
 2.	**Validate Image File Format in Profile Picture:** The image file is not restricted to commonly used picture formats.
 
 
