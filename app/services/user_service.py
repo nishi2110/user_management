@@ -15,9 +15,23 @@ from uuid import UUID
 from app.services.email_service import EmailService
 from app.models.user_model import UserRole
 import logging
+import re
 
 settings = get_settings()
 logger = logging.getLogger(__name__)
+
+def validate_password_complexity(password: str) -> bool:
+    if len(password) < settings.min_password_length:
+        return False
+    if not re.search(r"[A-Z]", password):
+        return False
+    if not re.search(r"[a-z]", password):
+        return False
+    if not re.search(r"[0-9]", password):
+        return False
+    if not re.search(r"[!@#$%^&*(),.?\":{}|<>]", password):
+        return False
+    return True
 
 class UserService:
     @classmethod
@@ -56,6 +70,10 @@ class UserService:
             existing_user = await cls.get_by_email(session, validated_data['email'])
             if existing_user:
                 logger.error("User with given email already exists.")
+                return None
+            
+            if not validate_password_complexity(validated_data['password']):
+                logger.error("Password does not meet complexity requirements.")
                 return None
 
             validated_data['hashed_password'] = hash_password(validated_data.pop('password'))
@@ -175,6 +193,9 @@ class UserService:
 
     @classmethod
     async def reset_password(cls, session: AsyncSession, user_id: UUID, new_password: str) -> bool:
+        if not validate_password_complexity(new_password):
+            logger.error("Password does not meet complexity requirements.")
+            return False
         hashed_password = hash_password(new_password)
         user = await cls.get_by_id(session, user_id)
         if user:
