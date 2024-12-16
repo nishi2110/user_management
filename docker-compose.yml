@@ -92,6 +92,19 @@ services:
     networks:
       - app-network
 
+  celery-worker:
+    build: .
+    command: >
+      celery -A app.utils worker --loglevel=info
+    depends_on:
+      - fastapi
+      - kafka
+    environment:
+      CELERY_BROKER_URL: kafka://kafka:9092
+      CELERY_RESULT_BACKEND: db+postgresql://user:password@postgres/myappdb:5432/myappdb
+    networks:
+      - app-network
+
 volumes:
   postgres-data:
   pgadmin-data:
