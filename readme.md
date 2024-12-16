@@ -57,7 +57,7 @@
 
 **Details:** The issue details are following:
 
-1.	**Synchronous Call inside Asynchronous Method:** Inside the send_user_email async method, the send email is called synchronously. 
-2.	**Exceptions are not handled in Email Service:** During rendering and sending emails, exceptions are not handled in send_user_email method.
+1.	**Synchronous Call inside Asynchronous Method:** Inside the `send_user_email` async method, the send email is called synchronously. 
+2.	**Exceptions are not handled in Email Service:** During rendering and sending emails, exceptions are not handled in `send_user_email` method.
 
 **Code Fix:** [Click Here](https://github.com/kaw393939/user_management/commit/3e4d86085a84f3a2083562fff7172d76a0beee0e)
