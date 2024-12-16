@@ -47,7 +47,7 @@ class Settings(BaseSettings):
     MINIO_SECRET_KEY: str = Field(default= "your_minio_secret_key", description="Minio secret key")
     MINIO_USE_SSL: bool = Field(default= False, description="Minio use ssl")
     MINIO_BUCKET_NAME: str = Field(default= "demo", description="Minio bucket name")
-    
+    MINIO_URL: str = Field(default= "http://localhost:9000", description="URL")
     class Config:
         # If your .env file is not in the root directory, adjust the path accordingly.
         env_file = ".env"
