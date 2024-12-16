@@ -45,3 +45,14 @@
 2.	In large-scale systems like user management, these degrade the overall performance.
 
 **Code Fix:** [Check Here](https://github.com/kaw393939/user_management/commit/cc19bbb217dff776b13b40628c456ed283774723)
+
+## Issue 5
+
+**Issue:** Validation Gaps in Password Management
+
+**Details:** The issue details are following:
+
+1.	There is no validation of managing the user passwords. 
+2.	Before hashing, there is no scope to validate for a strong password.
+
+**Code Fix:** [Check Here](https://github.com/kaw393939/user_management/commit/1df97db63cd74c627a8e396f75f521ad8c66b5e5)
