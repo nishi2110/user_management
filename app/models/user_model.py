@@ -53,7 +53,7 @@ class User(Base):
     __tablename__ = "users"
     __mapper_args__ = {"eager_defaults": True}
 
-    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
     nickname: Mapped[str] = Column(String(50), unique=True, nullable=False, index=True)
     email: Mapped[str] = Column(String(255), unique=True, nullable=False, index=True)
     first_name: Mapped[str] = Column(String(100), nullable=True)
@@ -70,11 +70,10 @@ class User(Base):
     is_locked: Mapped[bool] = Column(Boolean, default=False)
     created_at: Mapped[datetime] = Column(DateTime(timezone=True), server_default=func.now())
     updated_at: Mapped[datetime] = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
-    verification_token = Column(String, nullable=True)
+    verification_token = Column(String, nullable=True, index=True)
     verification_token_expiry = Column(DateTime, nullable=True)
     email_verified: Mapped[bool] = Column(Boolean, default=False, nullable=False)
     hashed_password: Mapped[str] = Column(String(255), nullable=False)
-
 
     def __repr__(self) -> str:
         """Provides a readable representation of a user object."""
