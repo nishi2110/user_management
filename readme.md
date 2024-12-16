@@ -23,3 +23,14 @@
 2.	It may create an infinite loop that makes the application hang and exhausts valuable resources.
 
 **Code Fix:** [Check Here](https://github.com/kaw393939/user_management/commit/63b8d12976aa9921cf8d7a36f17536490b16bf5e)
+
+## Issue 3
+
+**Issue:** No Expiry for Verification Tokens
+
+**Details:** The issue details are following:
+
+1.	No expiration duration has been mentioned for the tokens used for verification purposes.
+2.	Security vulnerabilities may be found if the tokens are not expired.
+
+**Code Fix:** [Check Here](https://github.com/kaw393939/user_management/commit/d05647a6c27e93137534a59f3e874d4d9930068d)
