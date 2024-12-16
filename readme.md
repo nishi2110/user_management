@@ -34,3 +34,14 @@
 2.	Security vulnerabilities may be found if the tokens are not expired.
 
 **Code Fix:** [Check Here](https://github.com/kaw393939/user_management/commit/d05647a6c27e93137534a59f3e874d4d9930068d)
+
+## Issue 4
+
+**Issue:** Indexing of Data Fields is Missing
+
+**Details:** The issue details are following:
+
+1.	Some of the fields like `id`,`email`, `nickname`, and `verification_token` are queried frequently without database indexing.
+2.	In large-scale systems like user management, these degrade the overall performance.
+
+**Code Fix:** [Check Here](https://github.com/kaw393939/user_management/commit/cc19bbb217dff776b13b40628c456ed283774723)
