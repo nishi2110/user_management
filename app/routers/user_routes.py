@@ -246,7 +246,11 @@ async def verify_email(user_id: UUID, token: str, db: AsyncSession = Depends(get
         return {"message": "Email verified successfully"}
     raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid or expired verification token")
 
-@router.put("/users/{user_id}/profile", response_model=UserResponse, tags=["User Profile Management"])
+@router.put("/users/{user_id}/profile", 
+    response_model=UserResponse, 
+    tags=["User Profile Management"],
+    summary="Update User Profile",
+    description="Update a user's profile information including bio, name, and social media links")
 async def update_profile(
     user_id: UUID,
     profile_update: UserUpdate,
@@ -254,7 +258,13 @@ async def update_profile(
     db: AsyncSession = Depends(get_db),
     current_user: dict = Depends(get_current_user)
 ):
-    """Update user's own profile information."""
+    """
+    Update user's own profile information.
+    
+    Parameters:
+    - user_id: UUID of the user to update
+    - profile_update: Profile fields to update (first_name, last_name, bio, etc.)
+    """
     # Check if user is updating their own profile or has admin/manager rights
     if current_user.get("role") not in ["ADMIN", "MANAGER"] and str(user_id) != str(current_user.get("id")):
         raise HTTPException(
@@ -282,7 +292,11 @@ async def update_profile(
         links=create_user_links(updated_user.id, request)
     )
 
-@router.put("/users/{user_id}/professional-status", response_model=UserResponse, tags=["User Profile Management"])
+@router.put("/users/{user_id}/professional-status",
+    response_model=UserResponse,
+    tags=["User Profile Management"],
+    summary="Update Professional Status",
+    description="Allow managers and admins to update a user's professional status")
 async def update_professional_status(
     user_id: UUID,
     status: bool,
@@ -293,6 +307,10 @@ async def update_professional_status(
 ):
     """
     Update user's professional status. Only available to admins and managers.
+    
+    Parameters:
+    - user_id: UUID of the user to update
+    - status: Boolean indicating professional status (true/false)
     """
     user = await UserService.update_professional_status(db, user_id, status)
     if not user:
