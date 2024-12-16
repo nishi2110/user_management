@@ -74,10 +74,11 @@ class UserUpdate(UserBase):
     first_name: Optional[str] = Field(None, example="John")
     last_name: Optional[str] = Field(None, example="Doe")
     bio: Optional[str] = Field(None, example="Experienced software developer specializing in web applications.")
-    profile_picture_url: Optional[str] = Field(None, example="https://example.com/profiles/john.jpg")
-    linkedin_profile_url: Optional[str] =Field(None, example="https://linkedin.com/in/johndoe")
-    github_profile_url: Optional[str] = Field(None, example="https://github.com/johndoe")
+    profile_picture_url: Optional[HttpUrl] = Field(None, example="https://example.com/profiles/john.jpg")
+    linkedin_profile_url: Optional[HttpUrl] = Field(None, example="https://linkedin.com/in/johndoe")
+    github_profile_url: Optional[HttpUrl] = Field(None, example="https://github.com/johndoe")
     role: Optional[str] = Field(None, example="AUTHENTICATED")
+
 
     @root_validator(pre=True)
     def check_at_least_one_value(cls, values):
@@ -90,6 +91,13 @@ class UserUpdate(UserBase):
         """Validate nickname rules."""
         if value and (not re.match(r'^[a-zA-Z0-9_-]+$', value)):
             raise ValueError("Nickname must contain only alphanumeric characters, underscores, or hyphens.")
+        return value
+    
+    @validator("profile_picture_url")
+    def validate_profile_picture_url(cls, value):
+        """Restrict profile picture URL to common image formats."""
+        if value and not value.lower().endswith((".png", ".jpg", ".jpeg", ".gif")):
+            raise ValueError("Profile picture URL must link to a valid image file (.png, .jpg, .jpeg, .gif).")
         return value
 
 
