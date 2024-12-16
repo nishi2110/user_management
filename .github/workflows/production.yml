@@ -24,20 +24,7 @@ jobs:
         ports:
           - 5432:5432
         options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
-      
-      minio:
-        image: quay.io/minio/minio
-        ports:
-          - 9000:9000
-          - 9001:9001 
-        options: >-
-          server /data --console-address :9001   
-        env:
-          MINIO_ROOT_USER: minioadmin
-          MINIO_ROOT_PASSWORD: minioadmin
-       
-
-
+   
     steps:
       - uses: actions/checkout@v4
       
@@ -58,13 +45,6 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-      
-      - name: Set MinIO environment variables
-        run: |
-          echo "MINIO_ENDPOINT=mini:9000" >> $GITHUB_ENV
-          echo "MINIO_ACCESS_KEY=minioadmin" >> $GITHUB_ENV
-          echo "MINIO_SECRET_KEY=minioadmin" >> $GITHUB_ENV
-          echo "MINIO_SECURE=false" >> $GITHUB_ENV    
           
       - name: Run tests with Pytest
         env:
