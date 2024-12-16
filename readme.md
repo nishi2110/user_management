@@ -27,3 +27,14 @@
 2. **Requirement of Uppercase, Lowercase, Digits and Special Characters:** There is no validation present for the condition if passwords have uppercase letters (A-Z), lowercase letters (a-z), numerical digits (0-9) and special characters (!@#$%^&*(),.?\":{}|<>).
 
 **Code Fix:** [Click Here](https://github.com/kaw393939/user_management/commit/28335cc379c4ca2da07221ae2fcec8f4fcad7489)
+
+## Issue 3
+
+**Issue:** Validate Nickname
+
+**Details:** The issue details are following:
+
+1.	**Valid Nickname Usage:** There is no validation to allow nicknames using characters, underscores, or hyphens.
+2.	**Length Validation:** Both minimum and maximum lengths are not declared.
+
+**Code Fix:** [Click Here](https://github.com/kaw393939/user_management/commit/bd85389f5f3458d860e752c9582cba2ce9d98977)
