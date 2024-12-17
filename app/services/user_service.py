@@ -57,13 +57,19 @@ class UserService:
             if existing_user:
                 logger.error("User with given email already exists.")
                 return None
-            
+
             validated_data['hashed_password'] = hash_password(validated_data.pop('password'))
 
-            new_nickname = generate_nickname()
-            while await cls.get_by_nickname(session, new_nickname):
+            retry_limit = 10
+            for _ in range(retry_limit):
                 new_nickname = generate_nickname()
-            validated_data['nickname'] = new_nickname
+                if not await cls.get_by_nickname(session, new_nickname):
+                    validated_data['nickname'] = new_nickname
+                    break
+            else:
+                fallback_nickname = f"user_{secrets.token_hex(4)}"
+                logger.warning(f"Retry limit reached. Using fallback nickname: {fallback_nickname}")
+                validated_data['nickname'] = fallback_nickname
 
             user_count = await cls.count(session)
             validated_data['role'] = UserRole.ADMIN if user_count == 0 else UserRole.ANONYMOUS
