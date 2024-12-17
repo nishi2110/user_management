@@ -1,5 +1,5 @@
 from builtins import bool, int, str
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum
 import uuid
 from sqlalchemy import (
@@ -65,7 +65,11 @@ class User(Base):
     role: Mapped[UserRole] = Column(SQLAlchemyEnum(UserRole, name='UserRole', create_constraint=True), nullable=False)
     is_professional: Mapped[bool] = Column(Boolean, default=False)
     professional_status_updated_at: Mapped[datetime] = Column(DateTime(timezone=True), nullable=True)
-    last_login_at: Mapped[datetime] = Column(DateTime(timezone=True), nullable=True)
+    _last_login_at: Mapped[datetime] = Column(
+        'last_login_at',  # This is the actual column name in the database
+        DateTime(timezone=True), 
+        nullable=True
+    )
     failed_login_attempts: Mapped[int] = Column(Integer, default=0)
     is_locked: Mapped[bool] = Column(Boolean, default=False)
     created_at: Mapped[datetime] = Column(DateTime(timezone=True), server_default=func.now())
@@ -96,3 +100,13 @@ class User(Base):
         """Updates the professional status and logs the update time."""
         self.is_professional = status
         self.professional_status_updated_at = func.now()
+
+    @property
+    def last_login_at(self) -> datetime:
+        """Get the last login timestamp."""
+        return self._last_login_at
+
+    @last_login_at.setter
+    def last_login_at(self, value: datetime):
+        """Set the last login timestamp."""
+        self._last_login_at = value

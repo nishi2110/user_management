@@ -38,7 +38,7 @@ class AnalyticsService:
     @staticmethod
     async def get_inactive_users(session: AsyncSession, inactive_period: timedelta) -> List[User]:
         cutoff_date = datetime.utcnow() - inactive_period
-        query = select(User).where(User.last_login_at < cutoff_date)
+        query = select(User).where(User._last_login_at < cutoff_date)
         result = await session.execute(query)
         return result.scalars().all()
 

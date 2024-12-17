@@ -1,11 +1,13 @@
 from builtins import Exception
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends
 from starlette.responses import JSONResponse
-from starlette.middleware.cors import CORSMiddleware  # Import the CORSMiddleware
-from app.database import Database
-from app.dependencies import get_settings
+from starlette.middleware.cors import CORSMiddleware
+from sqlalchemy.ext.asyncio import AsyncSession
+from app.dependencies import get_db, get_settings
 from app.routers import user_routes, analytics_routes
 from app.utils.api_description import getDescription
+from app.database import engine, Base
+
 app = FastAPI(
     title="User Management",
     description=getDescription(),
@@ -17,21 +19,20 @@ app = FastAPI(
     },
     license_info={"name": "MIT", "url": "https://opensource.org/licenses/MIT"},
 )
+
 # CORS middleware configuration
-# This middleware will enable CORS and allow requests from any origin
-# It can be configured to allow specific methods, headers, and origins
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # List of origins that are allowed to access the server, ["*"] allows all
-    allow_credentials=True,  # Support credentials (cookies, authorization headers, etc.)
-    allow_methods=["*"],  # Allowed HTTP methods
-    allow_headers=["*"],  # Allowed HTTP headers
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 @app.on_event("startup")
 async def startup_event():
-    settings = get_settings()
-    Database.initialize(settings.database_url, settings.debug)
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
 
 @app.exception_handler(Exception)
 async def exception_handler(request, exc):
@@ -39,5 +40,9 @@ async def exception_handler(request, exc):
 
 app.include_router(user_routes.router)
 app.include_router(analytics_routes.router)
+
+@app.get("/")
+async def root(db: AsyncSession = Depends(get_db)):
+    return {"message": "Hello World"}
 
 

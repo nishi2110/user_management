@@ -2,6 +2,7 @@ from builtins import bool, int, str
 from pathlib import Path
 from pydantic import Field, AnyUrl, DirectoryPath
 from pydantic_settings import BaseSettings
+import os
 
 class Settings(BaseSettings):
     max_login_attempts: int = Field(default=3, description="Background color of QR codes")
@@ -43,11 +44,13 @@ class Settings(BaseSettings):
 
     @property
     def database_url(self) -> str:
-        return f"postgresql+asyncpg://{self.postgres_user}:{self.postgres_password}@{self.postgres_server}:{self.postgres_port}/{self.postgres_db}"
+        if os.getenv("TESTING"):
+            return "sqlite+aiosqlite:///:memory:"
+        return f"postgresql+asyncpg://{self.postgres_user}:{self.postgres_password}@postgres:{self.postgres_port}/{self.postgres_db}"
 
     @property
     def sync_database_url(self) -> str:
-        return f"postgresql://{self.postgres_user}:{self.postgres_password}@{self.postgres_server}:{self.postgres_port}/{self.postgres_db}"
+        return f"postgresql://{self.postgres_user}:{self.postgres_password}@postgres:{self.postgres_port}/{self.postgres_db}"
 
     class Config:
         env_file = ".env"
