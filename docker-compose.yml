@@ -95,13 +95,13 @@ services:
   celery-worker:
     build: .
     command: >
-      celery -A app.utils worker --loglevel=info
+      celery -A app.utils.celery worker -E --loglevel=info
     depends_on:
       - fastapi
       - kafka
     environment:
+      PYTHONPATH: /myapp
       CELERY_BROKER_URL: kafka://kafka:9092
-      CELERY_RESULT_BACKEND: db+postgresql://user:password@postgres/myappdb:5432/myappdb
     networks:
       - app-network
 

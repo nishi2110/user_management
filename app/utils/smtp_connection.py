@@ -29,3 +29,8 @@ class SMTPClient:
         except Exception as e:
             logging.error(f"Failed to send email: {str(e)}")
             raise
+
+smtp_client = SMTPClient(server=settings.smtp_server,
+                        port=settings.smtp_port,
+                        username=settings.smtp_username,
+                        password=settings.smtp_password)
