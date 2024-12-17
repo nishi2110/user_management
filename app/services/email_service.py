@@ -1,10 +1,7 @@
-# email_service.py
 from builtins import ValueError, dict, str
-import logging
 
 from settings.config import settings
 from app.utils.template_manager import TemplateManager
-from app.utils.smtp_connection import smtp_client
 from app.models.user_model import User
 from app.utils.tasks import send_user_email
 
@@ -24,7 +21,6 @@ class EmailService:
 
         html_content = self.template_manager.render_template(email_type, **user_data)
         send_user_email.delay(subject_map[email_type], html_content, user_data['email'])
-        #smtp_client.send_email(subject_map[email_type], html_content, user_data['email'])
 
     def send_verification_email(self, user: User):
         verification_url = f"{settings.server_base_url}verify-email/{user.id}/{user.verification_token}"

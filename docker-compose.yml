@@ -95,13 +95,16 @@ services:
   celery-worker:
     build: .
     command: >
-      celery -A app.utils.celery worker -E --loglevel=info
+      celery -A app.utils.celery worker --pool=solo --loglevel=info --autoscale=5,2
     depends_on:
       - fastapi
       - kafka
     environment:
       PYTHONPATH: /myapp
+      MAILTRAP_API_URL: ${mailtrap_api_url}
+      MAILTRAP_API_TOKEN: ${mailtrap_api_token}
       CELERY_BROKER_URL: kafka://kafka:9092
+      #CELERY_RESULT_BACKEND: db+postgresql+asyncpg://user:password@postgres/myappdb:5432/myappdb
     networks:
       - app-network
 
