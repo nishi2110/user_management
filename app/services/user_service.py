@@ -79,6 +79,7 @@ class UserService:
                 new_user.email_verified = True
             else:
                 new_user.verification_token = generate_verification_token()
+                new_user.verification_token_expiry = datetime.utcnow() + timedelta(hours=24) 
                 await email_service.send_verification_email(new_user)
 
             session.add(new_user)
@@ -97,13 +98,36 @@ class UserService:
         except Exception as e:
             logger.error(f"Unexpected error during user creation: {e}")
             await session.rollback()
-            raise  
+            raise
+    @classmethod
+    async def verify_email_with_token(cls, session: AsyncSession, user_id: UUID, token: str) -> bool:
+        user = await cls.get_by_id(session, user_id)
+        if not user:
+            logger.error(f"User with ID {user_id} not found.")
+            return False
+
+        if user.verification_token != token:
+            logger.error("Invalid verification token.")
+            return False
+
+        if user.verification_token_expiry and datetime.utcnow() > user.verification_token_expiry:
+            logger.error("Verification token has expired.")
+            return False
+
+        # Update user state
+        user.email_verified = True
+        user.verification_token = None 
+        user.verification_token_expiry = None  
+        user.role = UserRole.AUTHENTICATED
+        session.add(user)
+        await session.commit()
+        return True
+
 
 
     @classmethod
     async def update(cls, session: AsyncSession, user_id: UUID, update_data: Dict[str, str]) -> Optional[User]:
         try:
-            # validated_data = UserUpdate(**update_data).dict(exclude_unset=True)
             validated_data = UserUpdate(**update_data).model_dump(exclude_unset=True)
 
             if 'password' in validated_data:
@@ -112,13 +136,13 @@ class UserService:
             await cls._execute_query(session, query)
             updated_user = await cls.get_by_id(session, user_id)
             if updated_user:
-                session.refresh(updated_user)  # Explicitly refresh the updated user object
+                session.refresh(updated_user) 
                 logger.info(f"User {user_id} updated successfully.")
                 return updated_user
             else:
                 logger.error(f"User {user_id} not found after update attempt.")
             return None
-        except Exception as e:  # Broad exception handling for debugging
+        except Exception as e: 
             logger.error(f"Error during user update: {e}")
             return None
 
