@@ -49,3 +49,15 @@ def test_generate_pagination_links(mock_request):
     assert len(links) >= 4
     expected_self_url = "http://testserver/users?limit=5&skip=10"
     assert normalize_url(str(links[0].href)) == normalize_url(expected_self_url), "Self link should match expected URL"
+
+def test_pagination_links_first_page(mock_request):
+    """Test pagination links for first page"""
+    links = generate_pagination_links(mock_request, 0, 10, 50)
+    assert any(link.rel == "next" for link in links)
+    assert not any(link.rel == "prev" for link in links)
+
+def test_pagination_links_last_page(mock_request):
+    """Test pagination links for last page"""
+    links = generate_pagination_links(mock_request, 40, 10, 50)
+    assert not any(link.rel == "next" for link in links)
+    assert any(link.rel == "prev" for link in links)

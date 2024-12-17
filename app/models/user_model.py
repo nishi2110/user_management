@@ -6,7 +6,7 @@ from sqlalchemy import (
     Column, String, Integer, DateTime, Boolean, func, Enum as SQLAlchemyEnum
 )
 from sqlalchemy.dialects.postgresql import UUID, ENUM
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.database import Base
 
 class UserRole(Enum):
@@ -74,6 +74,7 @@ class User(Base):
     email_verified: Mapped[bool] = Column(Boolean, default=False, nullable=False)
     hashed_password: Mapped[str] = Column(String(255), nullable=False)
 
+    analytics = relationship("UserAnalytics", back_populates="user", cascade="all, delete-orphan")
 
     def __repr__(self) -> str:
         """Provides a readable representation of a user object."""

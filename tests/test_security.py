@@ -65,3 +65,26 @@ def test_hash_password_internal_error(monkeypatch):
     with pytest.raises(ValueError):
         hash_password("test")
 
+def test_hash_password_unicode():
+    """Test hashing password with unicode characters"""
+    password = "パスワード123!"
+    hashed = hash_password(password)
+    assert verify_password(password, hashed)
+
+def test_verify_password_timing():
+    """Test that password verification takes similar time for right and wrong passwords"""
+    import time
+    password = "secure_password"
+    hashed = hash_password(password)
+    
+    start = time.time()
+    verify_password(password, hashed)
+    correct_time = time.time() - start
+    
+    start = time.time()
+    verify_password("wrong_password", hashed)
+    wrong_time = time.time() - start
+    
+    # Timing difference should be minimal to prevent timing attacks
+    assert abs(correct_time - wrong_time) < 0.1
+

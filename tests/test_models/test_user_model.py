@@ -139,3 +139,20 @@ async def test_update_user_role(db_session: AsyncSession, user: User):
     await db_session.commit()
     await db_session.refresh(user)
     assert user.role == UserRole.ADMIN, "Role update should persist correctly in the database"
+
+@pytest.mark.asyncio
+async def test_role_transition_to_manager(db_session, verified_user):
+    """Test transitioning a user's role to manager"""
+    verified_user.role = UserRole.MANAGER
+    await db_session.commit()
+    await db_session.refresh(verified_user)
+    assert verified_user.role == UserRole.MANAGER
+
+@pytest.mark.asyncio
+async def test_role_transition_history(db_session, verified_user):
+    """Test tracking role transition history"""
+    original_role = verified_user.role
+    verified_user.role = UserRole.MANAGER
+    await db_session.commit()
+    await db_session.refresh(verified_user)
+    assert verified_user.role != original_role

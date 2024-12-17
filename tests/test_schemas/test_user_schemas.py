@@ -108,3 +108,23 @@ def test_user_base_url_invalid(url, user_base_data):
     user_base_data["profile_picture_url"] = url
     with pytest.raises(ValidationError):
         UserBase(**user_base_data)
+
+@pytest.mark.parametrize("profile_url", [
+    "https://linkedin.com/in/validprofile",
+    "https://github.com/validuser",
+    None,
+])
+def test_valid_profile_urls(profile_url, user_base_data):
+    user_base_data["linkedin_profile_url"] = profile_url
+    user = UserBase(**user_base_data)
+    assert user.linkedin_profile_url == profile_url
+
+@pytest.mark.parametrize("profile_url", [
+    "not-a-url",
+    "ftp://invalid-protocol.com",
+    "http:/missing-slash.com",
+])
+def test_invalid_profile_urls(profile_url, user_base_data):
+    user_base_data["linkedin_profile_url"] = profile_url
+    with pytest.raises(ValidationError):
+        UserBase(**user_base_data)

@@ -161,3 +161,25 @@ async def test_unlock_user_account(db_session, locked_user):
     assert unlocked, "The account should be unlocked"
     refreshed_user = await UserService.get_by_id(db_session, locked_user.id)
     assert not refreshed_user.is_locked, "The user should no longer be locked"
+
+@pytest.mark.asyncio
+async def test_create_user_with_existing_nickname(db_session, verified_user, email_service):
+    """Test creating a user with an existing nickname"""
+    user_data = {
+        "nickname": verified_user.nickname,
+        "email": "different@example.com",
+        "password": "ValidPassword123!",
+    }
+    new_user = await UserService.create(db_session, user_data, email_service)
+    assert new_user is None
+
+@pytest.mark.asyncio
+async def test_update_user_profile_urls(db_session, verified_user):
+    """Test updating user's profile URLs"""
+    update_data = {
+        "github_profile_url": "https://github.com/newprofile",
+        "linkedin_profile_url": "https://linkedin.com/in/newprofile"
+    }
+    updated_user = await UserService.update(db_session, verified_user.id, update_data)
+    assert updated_user.github_profile_url == update_data["github_profile_url"]
+    assert updated_user.linkedin_profile_url == update_data["linkedin_profile_url"]
