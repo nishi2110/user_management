@@ -21,7 +21,7 @@ Key Highlights:
 from builtins import dict, int, len, str
 from datetime import timedelta
 from uuid import UUID
-from fastapi import APIRouter, Depends, HTTPException, Response, status, Request, UploadFile, File
+from fastapi import  FastAPI, APIRouter, Depends, HTTPException, Response, status, Request, UploadFile, File
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.dependencies import get_current_user, get_db, get_email_service, require_role
@@ -42,6 +42,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
+app = FastAPI()
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 settings = get_settings()
 @router.get("/users/{user_id}", response_model=UserResponse, name="get_user", tags=["User Management Requires (Admin or Manager Roles)"])
@@ -298,3 +299,29 @@ async def upload_profile_picture_endpoint(
         await db.rollback()
         logger.error(f"Failed to upload image: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to upload image: {str(e)}")
+    
+# Example endpoint to upload profile picture
+@app.post("/upload-profile-picture/")
+async def upload_profile_picture_endpoint(file: UploadFile = File(...)):
+    try:
+        # Read the uploaded file content as bytes
+        file_content = await file.read()
+
+        # Call the minio client to upload the profile picture
+        file_url = upload_profile_picture(file_content, file.filename)
+
+        return {"file_url": file_url}
+    
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+# Example endpoint to get the profile picture URL
+@app.get("/get-profile-picture/{file_name}")
+async def get_profile_picture_endpoint(file_name: str):
+    try:
+        # Get the URL of the profile picture
+        file_url = get_profile_picture_url(file_name)
+        return {"file_url": file_url}
+    
+    except Exception as e:
+        raise HTTPException(status_code=404, detail=f"File not found: {e}")
