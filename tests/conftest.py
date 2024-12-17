@@ -33,8 +33,8 @@ from app.database import Base, Database
 from app.models.user_model import User, UserRole
 from app.dependencies import get_db, get_settings
 from app.utils.security import hash_password
-from app.utils.template_manager import TemplateManager
 from app.services.email_service import EmailService
+from app.services.notification_service import NotificationService
 from app.services.jwt_service import create_access_token
 from app.utils.nickname_gen import generate_nickname
 
@@ -49,11 +49,15 @@ AsyncSessionScoped = scoped_session(AsyncTestingSessionLocal)
 
 @pytest.fixture
 def email_service():
-    # Assuming the TemplateManager does not need any arguments for initialization
-    template_manager = TemplateManager()
-    email_service = EmailService(template_manager=template_manager)
+    # Assuming the EmailService does not need any arguments for initialization
+    email_service = EmailService()
     return email_service
 
+@pytest.fixture
+def notification_service():
+    # Assuming the EmailService does not need any arguments for initialization
+    notification_service = NotificationService()
+    return notification_service
 
 # this is what creates the http client for your api tests
 @pytest.fixture(scope="function")
@@ -236,6 +240,18 @@ def email_service():
     else:
         # Otherwise, use a mock to prevent actual email sending
         mock_service = AsyncMock(spec=EmailService)
-        mock_service.send_verification_email.return_value = None
-        mock_service.send_user_email.return_value = None
+        mock_service.send_email.return_value = None
+        mock_service.send_email.return_value = None
+        return mock_service
+    
+@pytest.fixture
+def notification_service():
+    if settings.send_real_mail == 'true':
+        # Return the real email service when specifically testing email functionality
+        return NotificationService()
+    else:
+        # Otherwise, use a mock to prevent actual email sending
+        mock_service = AsyncMock(spec=NotificationService)
+        mock_service.email_verification.return_value = None
+        mock_service.email_verification.return_value = None
         return mock_service

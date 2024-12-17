@@ -7,12 +7,12 @@ from sqlalchemy import func, null, update, select
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.dependencies import get_email_service, get_settings
+from app.dependencies import get_settings
 from app.models.user_model import User
 from app.schemas.user_schemas import UserCreate, UserUpdate
 from app.utils.security import generate_verification_token, hash_password, verify_password
 from uuid import UUID
-from app.services.email_service import EmailService
+from app.services.notification_service import NotificationService
 from app.models.user_model import UserRole
 import logging
 
@@ -57,7 +57,7 @@ class UserService:
         return await cls._fetch_user(session, email=email)
 
     @classmethod
-    async def create(cls, session: AsyncSession, user_data: Dict[str, str], email_service: EmailService) -> Optional[User]:
+    async def create(cls, session: AsyncSession, user_data: Dict[str, str], notification_service: NotificationService) -> Optional[User]:
         try:
             validated_data = UserCreate(**user_data).model_dump()
             existing_email = await cls.get_by_email(session, validated_data['email'])
@@ -73,7 +73,7 @@ class UserService:
             new_user.verification_token = generate_verification_token()
             session.add(new_user)
             await session.commit()
-            email_service.send_verification_email(new_user)
+            notification_service.email_verification(new_user)
             return new_user
         except ValidationError as e:
             logger.error(f"Validation error during user creation: {e}")
@@ -136,7 +136,7 @@ class UserService:
             else:
                 user.failed_login_attempts += 1
                 if user.failed_login_attempts >= settings.max_login_attempts:
-                    user.is_locked = True
+                    user.lock_account()
                 session.add(user)
                 await session.commit()
         return None
@@ -145,7 +145,6 @@ class UserService:
     async def is_account_locked(cls, session: AsyncSession, email: str) -> bool:
         user = await cls.get_by_email(session, email)
         return user.is_locked if user else False
-
 
     @classmethod
     async def reset_password(cls, session: AsyncSession, user_id: UUID, new_password: str) -> bool:
@@ -164,10 +163,7 @@ class UserService:
     async def verify_email_with_token(cls, session: AsyncSession, user_id: UUID, token: str) -> bool:
         user = await cls.get_by_id(session, user_id)
         if user and user.verification_token == token:
-            user.email_verified = True
-            user.verification_token = None  # Clear the token once used
-            if user.role == UserRole.ANONYMOUS:
-                user.role = UserRole.AUTHENTICATED
+            user.verify_email()
             session.add(user)
             await session.commit()
             return True
@@ -190,8 +186,7 @@ class UserService:
     async def unlock_user_account(cls, session: AsyncSession, user_id: UUID) -> bool:
         user = await cls.get_by_id(session, user_id)
         if user and user.is_locked:
-            user.is_locked = False
-            user.failed_login_attempts = 0  # Optionally reset failed login attempts
+            user.unlock_account()
             session.add(user)
             await session.commit()
             return True

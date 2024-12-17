@@ -4,7 +4,7 @@ from settings.config import settings
 
 app = Celery('app', 
              broker=f'kafka://{settings.kafka_broker_address}', 
-             #backend='db+postgresql://user:password@postgres/myappdb:5432/myappdb'
+             backend='db+postgresql://user:password@postgres/myappdb'
              )
 
 app.autodiscover_tasks(['app.utils'])

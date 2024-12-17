@@ -38,7 +38,7 @@ class Settings(BaseSettings):
     openai_api_key: str = Field(default='NONE', description="Open AI Api Key")
     send_real_mail: bool = Field(default=False, description="use mock")
     # Email settings for Mailtrap
-    smtp_useremail: str = Field(default='donotreply@example.com', description="Username for SMTP server")
+    mailtrap_useremail: str = Field(default='donotreply@example.com', description="mailtrap user email")
     mailtrap_api_url: AnyUrl = Field(default='http://mailtrap-api-url', description="mailtrap.io api credentials url")
     mailtrap_api_token: str = Field(default='your-mailtrap-api-token', description="mailtrap api token")
     # kafka config

@@ -84,9 +84,12 @@ class User(Base):
 
     def unlock_account(self):
         self.is_locked = False
+        self.failed_login_attempts = 0
 
     def verify_email(self):
         self.email_verified = True
+        self.verification_token = None
+        self.role = UserRole.AUTHENTICATED if self.role == UserRole.ANONYMOUS else self.role
 
     def has_role(self, role_name: UserRole) -> bool:
         return self.role == role_name

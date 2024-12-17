@@ -104,7 +104,7 @@ services:
       MAILTRAP_API_URL: ${mailtrap_api_url}
       MAILTRAP_API_TOKEN: ${mailtrap_api_token}
       CELERY_BROKER_URL: kafka://kafka:9092
-      #CELERY_RESULT_BACKEND: db+postgresql+asyncpg://user:password@postgres/myappdb:5432/myappdb
+      CELERY_RESULT_BACKEND: db+postgresql://user:password@postgres/myappdb
     networks:
       - app-network
 

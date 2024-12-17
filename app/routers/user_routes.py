@@ -24,7 +24,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, Response, status, Request
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.dependencies import get_current_user, get_db, get_email_service, require_role
+from app.dependencies import get_current_user, get_db, get_notification_service, require_role
 from app.schemas.pagination_schema import EnhancedPagination
 from app.schemas.token_schema import TokenResponse
 from app.schemas.user_schemas import LoginRequest, UserBase, UserCreate, UserListResponse, UserResponse, UserUpdate
@@ -32,7 +32,7 @@ from app.services.user_service import UserService
 from app.services.jwt_service import create_access_token
 from app.utils.link_generation import create_user_links, generate_pagination_links
 from app.dependencies import get_settings
-from app.services.email_service import EmailService
+from app.services.notification_service import NotificationService
 
 router = APIRouter()
 
@@ -127,7 +127,7 @@ async def delete_user(user_id: UUID, session: AsyncSession = Depends(get_db), to
 
 
 @router.post("/users/", response_model=UserResponse, status_code=status.HTTP_201_CREATED, tags=["User Management Requires (Admin or Manager Roles)"], name="create_user")
-async def create_user(user: UserCreate, request: Request, session: AsyncSession = Depends(get_db), email_service: EmailService = Depends(get_email_service), token: str = Depends(oauth2_scheme), current_user: dict = Depends(require_role(["ADMIN", "MANAGER"]))):
+async def create_user(user: UserCreate, request: Request, session: AsyncSession = Depends(get_db), notification_service: NotificationService =Depends(get_notification_service), token: str = Depends(oauth2_scheme), current_user: dict = Depends(require_role(["ADMIN", "MANAGER"]))):
     """
     Create a new user.
 
@@ -147,7 +147,7 @@ async def create_user(user: UserCreate, request: Request, session: AsyncSession 
     if existing_user:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Email already exists")
     
-    created_user = await UserService.create(session, user.model_dump(), email_service)
+    created_user = await UserService.create(session, user.model_dump(), notification_service)
     if not created_user:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to create user")
     
@@ -196,14 +196,14 @@ async def list_users(
 
 
 @router.post("/register/", response_model=UserResponse, tags=["Login and Registration"])
-async def register(user_data: UserCreate, session: AsyncSession = Depends(get_db), email_service: EmailService = Depends(get_email_service)):
+async def register(user_data: UserCreate, session: AsyncSession = Depends(get_db), notification_service: NotificationService =Depends(get_notification_service)):
     existing_user = await UserService.get_by_email(session, user_data.email)
     if existing_user:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Email already exists")
     existing_user = await UserService.get_by_nickname(session, user_data.nickname)
     if existing_user:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Nickname already exists")
-    user = await UserService.register_user(session, user_data.model_dump(), email_service)
+    user = await UserService.register_user(session, user_data.model_dump(), notification_service)
     if user:
         return user
 
@@ -230,7 +230,7 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends(), session: Async
 
 
 @router.get("/verify-email/{user_id}/{token}", status_code=status.HTTP_200_OK, name="verify_email", tags=["Login and Registration"])
-async def verify_email(user_id: UUID, token: str, session: AsyncSession = Depends(get_db), email_service: EmailService = Depends(get_email_service)):
+async def verify_email(user_id: UUID, token: str, session: AsyncSession = Depends(get_db), notification_service: NotificationService =Depends(get_notification_service)):
     """
     Verify user's email with a provided token.
     
