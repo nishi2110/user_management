@@ -54,8 +54,7 @@
 
 3. **Create a Minio Client:**  we are configuring the Minio client to connect to our minio service and making sure the bucket exists.
 
-4. **Create Profile Picture Upload Endpoint:**add an API endpoint to handle the profile picture upload. This will allow users to upload    
-  their profile pictures to the Minio bucket:
+4. **Create Profile Picture Upload Endpoint:** add an API endpoint to handle the profile picture upload. This will allow users to upload   their profile pictures to the Minio bucket:
   - **Explanation:**
   - upload-profile-picture/ is a POST endpoint that accepts a file upload.
   - The file is stored in the demo bucket.
@@ -63,8 +62,7 @@
 
 5. **Add Profile Picture URL to User Model:** Update the user model to include a field for the profile picture URL.
 
-6. **Update User Profile API to Include Profile Picture URL:**Modify the existing user profile API endpoints to allow updating the profile 
-  picture URL.
+6. **Update User Profile API to Include Profile Picture URL:** Modify the existing user profile API endpoints to allow updating the profile picture URL.
 
 7. **Retrieve Profile Picture URL:** In the user profile view endpoint, retrieve the URL of the profile picture from Minio. 
 
@@ -75,11 +73,11 @@
   - Create unit tests to verify that the profile picture upload and retrieval functionalities work as expected.
 
 - ### Output:
-- **Manually Run store jpeg file in minIO server demo bucket**
+- **Run command and store jpeg file in minIO server demo bucket you can see image in miniIO bucket**
   ```WARN[0000] /home/hpatel/API/IS601_final_user_management/docker-compose.yml: the attribute 'version' is obsolete, it will be ignored, please remove it to avoid potential confusion 
   Bucket 'demo' already exists.
-  File 'njit.jpeg' successfully uploaded to bucket 'demo'.
-  Generated presigned URL for 'njit.jpeg': http://localhost:9000/demo/india.jpeg
+  File 'india.jpeg' successfully uploaded to bucket 'demo'.
+  Generated presigned URL for 'india.jpeg': http://localhost:9000/demo/india.jpeg
   Presigned URL: http://localhost:9000/demo/india.jpeg
 
 - ### Open FastAPI and get image and you can see iamge url:
