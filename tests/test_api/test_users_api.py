@@ -190,3 +190,28 @@ async def test_list_users_unauthorized(async_client, user_token):
         headers={"Authorization": f"Bearer {user_token}"}
     )
     assert response.status_code == 403  # Forbidden, as expected for regular user
+
+@pytest.mark.asyncio
+async def test_update_user_invalid_url(async_client, admin_user, admin_token):
+    """Test updating user with invalid URL format"""
+    updated_data = {"github_profile_url": "not-a-valid-url"}
+    headers = {"Authorization": f"Bearer {admin_token}"}
+    response = await async_client.put(
+        f"/users/{admin_user.id}", 
+        json=updated_data, 
+        headers=headers
+    )
+    assert response.status_code == 422
+
+@pytest.mark.asyncio
+async def test_update_user_partial_data(async_client, admin_user, admin_token):
+    """Test partial user data update"""
+    updated_data = {"first_name": "NewName"}
+    headers = {"Authorization": f"Bearer {admin_token}"}
+    response = await async_client.put(
+        f"/users/{admin_user.id}", 
+        json=updated_data, 
+        headers=headers
+    )
+    assert response.status_code == 200
+    assert response.json()["first_name"] == "NewName"
