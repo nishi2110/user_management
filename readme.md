@@ -1,53 +1,55 @@
 
+## The User Management System IS601-Final Project: 
+- The project for the User Management System gave participants excellent practical experience in the field of professional software     development. I focused on enhancing user profile functionality by integrating a Profile Picture Upload feature using Minio.To ensure efficient user interactions, I also included strong validation and handled edge cases. 
 
-# The User Management System Final Project: Your Epic Coding Adventure Awaits! 🎉✨🔥
+### The submission meets the following goals:
+- Fixed five QA Issues/Bugs across the code.
+- Implements a NEW feature-1Profile Picture Upload with Minio  into the existing code.
+- Created 10 NEW Tests for the new feature implemented.
+- Includes a Reflection Document for the course.
 
-## Introduction: Buckle Up for the Ride of a Lifetime 🚀🎬
+### Setup and Preliminary Steps: 
 
-Welcome to the User Management System project - an epic open-source adventure crafted by the legendary Professor Keith Williams for his rockstar students at NJIT! 🏫👨‍🏫⭐ This project is your gateway to coding glory, providing a bulletproof foundation for a user management system that will blow your mind! 🤯 You'll bridge the gap between the realms of seasoned software pros and aspiring student developers like yourselves. 
+1. Fork the Project Repository: Fork the project repository to my own GitHub account.
 
-### [Instructor Video - Project Overview and Tips](https://youtu.be/gairLNAp6mA) 🎥
+2. Clone the repository to your local machine: Clone the forked repository to our local machine using the git clone command. 
+  This creates a local copy of the repository on our computer, enabling we make changes and run the project locally.
 
-- [Introduction to the system features and overview of the project - please read](system_documentation.md) 📚
-- [Project Setup Instructions](setup.md) ⚒️
-- [Features to Select From](features.md) 🛠️
-- [About the Project](about.md)🔥🌟
+   ```git clone git@github.com:nisha2110/IS601_final_user_management.git ```
 
-## Goals and Objectives: Unlock Your Coding Superpowers 🎯🏆🌟
+## Change directory to the project
+ ``` cd IS601_final_user_management and open code in  vistual studio write cmd: code . ``` 
 
-Get ready to ascend to new heights with this legendary project:
+## Install and Setup Docker [compulsory]
 
-1. **Practical Experience**: Dive headfirst into a real-world codebase, collaborate with your teammates, and contribute to an open-source project like a seasoned pro! 💻👩‍💻🔥
-2. **Quality Assurance**: Develop ninja-level skills in identifying and resolving bugs, ensuring your code quality and reliability are out of this world. 🐞🔍⚡
-3. **Test Coverage**: Write additional tests to cover edge cases, error scenarios, and important functionalities - leave no stone unturned and no bug left behind! ✅🧪🕵️‍♂️
-4. **Feature Implementation**: Implement a brand new, mind-blowing feature and make your epic mark on the project, following best practices for coding, testing, and documentation like a true artisan. ✨🚀🎆
-5. **Collaboration**: Foster teamwork and collaboration through code reviews, issue tracking, and adhering to contribution guidelines - teamwork makes the dream work, and together you'll conquer worlds! 🤝💪🌍
-6. **Industry Readiness**: Prepare for the software industry by working on a project that simulates real-world development scenarios - level up your skills to super hero status  and become an unstoppable coding force! 🔝🚀🏆⚡
+3. Verify the Project Setup: Follow the steps in the instructor video to set up the project using Docker. Docker allows our to package the application with all its dependencies into a standardized unit called a container. Verify that you can access the API documentation at http://localhost/docs and the database using PGAdmin at http://localhost:5050.
 
-## Submission and Grading: Your Chance to Shine 📝✏️📈
+## Commands:
+  - docker compose up --build
+  - Running tests using pytest
+  - docker compose exec fastapi pytest
+  - docker compose exec fastapi pytest tests/test_services/test_user_service.py::test_list_users
+  - Need to apply database migrationss: docker compose exec fastapi alembic upgrade head
+  - Upload Image to minIO : docker compose exec fastapi python3 -m app.utils.minio_client
 
-1. **Reflection Document**: Submit a 1-2 page Word document reflecting on your learnings throughout the course and your experience working on this epic project. Include links to the closed issues for the **5 QA issues, 10 NEW tests, and 1 Feature** you'll be graded on. Make sure your project successfully deploys to DockerHub and include a link to your Docker repository in the document - let your work speak for itself! 📄🔗💥
+# Access various components
+- PgAdmin:  http://localhost:5050
+- FastAPI Swagger UI: http://localhost/docs
+- MinIO console app open : http://localhost:9001
+- MinIO API : http://localhost:9000
 
-2. **Commit History**: Show off your consistent hard work through your commit history like a true coding warrior. **Projects with less than 10 commits will get an automatic 0 - ouch!** 😬⚠️ A significant part of your project's evaluation will be based on your use of issues, commits, and following a professional development process like a boss - prove your coding prowess! 💻🔄🔥
 
-3. **Deployability**: Broken projects that don't deploy to Dockerhub or pass all the automated tests on GitHub actions will face point deductions - nobody likes a buggy app! 🐞☠️ Show the world your flawless coding skills!
+##  Feature-1 Implemented: Profile Picture Upload with Minio :
+- This feature enhances the user profile management system by enabling users to upload and store profile pictures using Minio, a distributed object storage system. By personalizing their accounts with profile pictures, users gain a more engaging and tailored experience. The functionality focuses on secure storage, efficient retrieval, and seamless integration with the existing user profile management system.
 
-## Managing the Project Workload: Stay Focused, Stay Victorious ⏱️🧠⚡
+### Five QA Issues/Bugs Resolved - [Link here](https://github.com/nisha2110/IS601_final_user_management/blob/main/documentation/Issue.md)
 
-This project requires effective time management and a well-planned strategy, but fear not - you've got this! Follow these steps to ensure a successful (and sane!) project outcome:
+### Feature-1 Profile Picture Upload with Minio - [Link here](https://github.com/nisha2110/IS601_final_user_management/blob/main/documentation/feature-1_upload_picture.md)
 
-1. **Select a Feature**: [Choose a feature](features.md) from the provided list of additional improvements that sparks your interest and aligns with your goals like a laser beam. ✨⭐🎯 This is your chance to shine!
+### Test cases - [Link here](https://github.com/nisha2110/IS601_final_user_management/blob/main/documentation/Testcases.md)
 
-2. **Quality Assurance (QA)**: Thoroughly test the system's major functionalities related to your chosen feature and identify at least 5 issues or bugs like a true detective. Create GitHub issues for each identified problem, providing detailed descriptions and steps to reproduce - the more detail, the merrier! 🔍🐞🕵️‍♀️ Leave no stone unturned!
+### DockerHub Repository - [Link here](https://hub.docker.com/repository/docker/nishi2110/is601_final_api/general)
 
-3. **Test Coverage Improvement**: Review the existing test suite and identify gaps in test coverage like a pro. Create 10 additional tests to cover edge cases, error scenarios, and important functionalities related to your chosen feature. Focus on areas such as user registration, login, authorization, and database interactions. Simulate the setup of the system as the admin user, then creating users, and updating user accounts - leave no stone unturned, no bug left behind! ✅🧪🔍🔬 Become the master of testing!
+### GitHub Repository - [Link here](https://github.com/nisha2110/IS601_final_user_management/)
 
-4. **New Feature Implementation**: Implement your chosen feature, following the project's coding practices and architecture like a coding ninja. Write appropriate tests to ensure your new feature is functional and reliable like a rock. Document the new feature, including its usage, configuration, and any necessary migrations - future you will thank you profusely! 🚀✨📝👩‍💻⚡ Make your mark on this project!
-
-5. **Maintain a Working Main Branch**: Throughout the project, ensure you always have a working main branch deploying to Docker like a well-oiled machine. This will prevent any last-minute headaches and ensure a smooth submission process - no tears allowed, only triumphs! 😊🚢⚓ Stay focused, stay victorious!
-
-Remember, it's more important to make something work reliably and be reasonably complete than to implement an overly complex feature. Focus on creating a feature that you can build upon or demonstrate in an interview setting - show off your skills like a rockstar! 💪🚀🎓
-
-Don't forget to always have a working main branch deploying to Docker at all times. If you always have a working main branch, you will never be in jeopardy of receiving a very disappointing grade :-). Keep that main branch shining bright!
-
-Let's embark on this epic coding adventure together and conquer the world of software engineering! You've got this, coding rockstars! 🚀🌟✨
+### Document Reflection File - [Link here](https://github.com/nisha2110/IS601_final_user_management/blob/main/documentation/Document_reflection.docx)
