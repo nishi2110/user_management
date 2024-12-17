@@ -1,3 +1,4 @@
+### Overview of feature1  Profile Picture Upload with Minio:
 - This feature enhances the user profile management system by enabling users to upload and store profile pictures using Minio, a distributed object storage system. By personalizing their accounts with profile pictures, users gain a more engaging and tailored experience. The functionality focuses on secure storage, efficient retrieval, and seamless integration with the existing user profile management system.
 
 ### Description of Implementation:
@@ -39,12 +40,64 @@
 - Prevents unnecessary storage usage by rejecting oversized or unsupported files.
 - Supports scalable and maintainable code through automated test coverage.
 
-- Output:
-```WARN[0000] /home/hpatel/API/IS601_final_user_management/docker-compose.yml: the attribute 'version' is obsolete, it will be ignored, please remove it to avoid potential confusion 
-Bucket 'demo' already exists.
-File 'njit.jpeg' successfully uploaded to bucket 'demo'.
-Generated presigned URL for 'njit.jpeg': http://localhost:9000/demo/india.jpeg
-Presigned URL: http://localhost:9000/demo/india.jpeg```
+### GitHub Issue Link:
+- **Install and config minIO - [here](https://github.com/nisha2110/IS601_final_user_management/issues/13)**
+- **Code integration - [here](https://github.com/nisha2110/IS601_final_user_management/issues/15)**
+- **Test and fix Profile url fetch and retrieve minIO - [here](https://github.com/nisha2110/IS601_final_user_management/issues/27)**
+
+### To implement a Profile Picture Upload with Minio in project,follow these steps:
+
+1. **Set Up Minio with Docker:** Make sure Minio is up and running by executing docker-compose up from the root of  project directory.
+2. **Install Required Libraries:**
+   ```pip install minio```
+  ```pip install fastapi uvicorn python-multipart```
+
+3. **Create a Minio Client:**  we are configuring the Minio client to connect to our minio service and making sure the bucket exists.
+
+4. **Create Profile Picture Upload Endpoint:**add an API endpoint to handle the profile picture upload. This will allow users to upload    
+  their profile pictures to the Minio bucket:
+  - **Explanation:**
+  - upload-profile-picture/ is a POST endpoint that accepts a file upload.
+  - The file is stored in the demo bucket.
+  - The function returns the URL where the profile picture is accessible.
+
+5. **Add Profile Picture URL to User Model:** Update the user model to include a field for the profile picture URL.
+
+6. **Update User Profile API to Include Profile Picture URL:**Modify the existing user profile API endpoints to allow updating the profile 
+  picture URL.
+
+7. **Retrieve Profile Picture URL:** In the user profile view endpoint, retrieve the URL of the profile picture from Minio. 
+
+8. **Optional Enhancements and Write Unit Tests:** 
+  -  resize images before uploading them to Minio to ensure consistent image sizes and optimize loading times.
+  -  File Format and Size Validation: Validate the file format and size before uploading to Minio.
+  - Set a default profile picture.
+  - Create unit tests to verify that the profile picture upload and retrieval functionalities work as expected.
+
+- ### Output:
+- **Manually Run store jpeg file in minIO server demo bucket**
+  ```WARN[0000] /home/hpatel/API/IS601_final_user_management/docker-compose.yml: the attribute 'version' is obsolete, it will be ignored, please remove it to avoid potential confusion 
+  Bucket 'demo' already exists.
+  File 'njit.jpeg' successfully uploaded to bucket 'demo'.
+  Generated presigned URL for 'njit.jpeg': http://localhost:9000/demo/india.jpeg
+  Presigned URL: http://localhost:9000/demo/india.jpeg
+
+- ### Open FastAPI and get image and you can see iamge url:
+ ![screenshot](https://github.com/nisha2110/IS601_final_user_management/blob/main/documentation/india_url.PNG)
+
+- ### FastAPI copy and paste Url in console show result:
+  ![Image open in console](https://github.com/nisha2110/IS601_final_user_management/blob/main/documentation/openimage.PNG)
+
+- ### MinIO Bucket:
+  ![MinIO Bucket](https://github.com/nisha2110/IS601_final_user_management/blob/main/documentation/minio_console.PNG)
+
+- ### Profile picture Preview in MinIO:
+  ![Profile picture Preview in MinIO](https://github.com/nisha2110/IS601_final_user_management/blob/main/documentation/preview.PNG) 
+
+- ### This image store in my project 
+  ![Image store in minio_data folder](https://github.com/nisha2110/IS601_final_user_management/blob/main/documentation/minio_data%20store.PNG) 
+
+
 
 
 
