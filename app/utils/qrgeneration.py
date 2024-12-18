@@ -11,7 +11,7 @@ def generate_qr_code(inviter_nickname: str, invite_id: uuid.UUID) -> str:
     qr.add_data(qr_data)
     qr.make(fit=True)
 
-    img = qr.make_image(fill="black", back_color="white")
+    img = qr.make_image(fill="orange", back_color="white")
     file_path = f"qr_{invite_id}.png"
     img.save(file_path)
     return file_path

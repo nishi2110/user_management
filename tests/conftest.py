@@ -5,7 +5,6 @@ from faker import Faker
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker, scoped_session
-
 from app.main import app
 from app.database import Base, Database
 from app.models.user_model import User, UserRole
@@ -24,7 +23,7 @@ engine = create_async_engine(TEST_DATABASE_URL, echo=settings.debug)
 AsyncTestingSessionLocal = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 AsyncSessionScoped = scoped_session(AsyncTestingSessionLocal)
 
-# Global fixtures
+# Database initialization fixture
 @pytest.fixture(scope="session", autouse=True)
 def initialize_database():
     """Initialize the database once per test session."""
@@ -33,7 +32,7 @@ def initialize_database():
     except Exception as e:
         pytest.fail(f"Failed to initialize the database: {str(e)}")
 
-
+# Setup and teardown fixture for database
 @pytest.fixture(scope="function", autouse=True)
 async def setup_database():
     """Set up and tear down the database for each test."""
@@ -44,20 +43,18 @@ async def setup_database():
         await conn.run_sync(Base.metadata.drop_all)
     await engine.dispose()
 
-
+# Provide a database session for tests
 @pytest.fixture(scope="function")
 async def db_session():
-    """Provide a database session for each test."""
     async with AsyncSessionScoped() as session:
         try:
             yield session
         finally:
             await session.close()
 
-
+# Provide an asynchronous HTTP client
 @pytest.fixture(scope="function")
 async def async_client(db_session):
-    """Provide an asynchronous HTTP client."""
     async with AsyncClient(app=app, base_url="http://testserver") as client:
         app.dependency_overrides[get_db] = lambda: db_session
         try:
@@ -65,10 +62,8 @@ async def async_client(db_session):
         finally:
             app.dependency_overrides.clear()
 
-
-# User fixtures
+# Utility function to create a user
 async def create_user(db_session, **kwargs):
-    """Utility function to create a user with specified attributes."""
     user_data = {
         "nickname": fake.user_name(),
         "first_name": fake.first_name(),
@@ -85,7 +80,7 @@ async def create_user(db_session, **kwargs):
     await db_session.commit()
     return user
 
-
+# User-related fixtures
 @pytest.fixture(scope="function")
 async def locked_user(db_session):
     return await create_user(
@@ -95,21 +90,17 @@ async def locked_user(db_session):
         failed_login_attempts=settings.max_login_attempts,
     )
 
-
 @pytest.fixture(scope="function")
 async def user(db_session):
     return await create_user(db_session)
-
 
 @pytest.fixture(scope="function")
 async def verified_user(db_session):
     return await create_user(db_session, email_verified=True)
 
-
 @pytest.fixture(scope="function")
 async def unverified_user(db_session):
     return await create_user(db_session, email_verified=False)
-
 
 @pytest.fixture(scope="function")
 async def users_with_same_role_50_users(db_session):
@@ -118,7 +109,6 @@ async def users_with_same_role_50_users(db_session):
         user = await create_user(db_session)
         users.append(user)
     return users
-
 
 @pytest.fixture(scope="function")
 async def admin_user(db_session):
@@ -129,7 +119,6 @@ async def admin_user(db_session):
         role=UserRole.ADMIN,
     )
 
-
 @pytest.fixture(scope="function")
 async def manager_user(db_session):
     return await create_user(
@@ -139,27 +128,23 @@ async def manager_user(db_session):
         role=UserRole.MANAGER,
     )
 
-
-# Token fixtures
+# Token-related fixtures
 @pytest.fixture(scope="function")
 def admin_token(admin_user):
     token_data = {"sub": str(admin_user.id), "role": admin_user.role.name}
     return create_access_token(data=token_data, expires_delta=timedelta(minutes=30))
-
 
 @pytest.fixture(scope="function")
 def manager_token(manager_user):
     token_data = {"sub": str(manager_user.id), "role": manager_user.role.name}
     return create_access_token(data=token_data, expires_delta=timedelta(minutes=30))
 
-
 @pytest.fixture(scope="function")
 def user_token(user):
     token_data = {"sub": str(user.id), "role": user.role.name}
     return create_access_token(data=token_data, expires_delta=timedelta(minutes=30))
 
-
-# Email service fixture
+# Email service mock fixture
 @pytest.fixture(scope="function")
 def email_service():
     if settings.send_real_mail == "true":

@@ -7,7 +7,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from app.database import Base, Database  # Importing Base and Database for initialization
+from app.database import Base  # Importing Base for model initialization
 
 
 # User Roles Enum
@@ -31,7 +31,6 @@ class InvitationStatus(Enum):
 class User(Base):
     """
     Represents a user within the application, corresponding to the 'users' table in the database.
-    This class uses SQLAlchemy ORM for mapping attributes to database columns efficiently.
     """
     __tablename__ = "users"
     __mapper_args__ = {"eager_defaults": True}
@@ -53,7 +52,7 @@ class User(Base):
     is_locked: Mapped[bool] = Column(Boolean, default=False)
     created_at: Mapped[datetime] = Column(DateTime(timezone=True), server_default=func.now())
     updated_at: Mapped[datetime] = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
-    verification_token = Column(String, nullable=True)
+    verification_token: Mapped[str] = Column(String, nullable=True)
     email_verified: Mapped[bool] = Column(Boolean, default=False, nullable=False)
     hashed_password: Mapped[str] = Column(String(255), nullable=False)
 
@@ -113,8 +112,3 @@ class Invitation(Base):
     def mark_accepted(self):
         """Marks the invitation as accepted and logs the time."""
         self.status = InvitationStatus.ACCEPTED
-
-
-# Database Initialization (Example)
-DATABASE_URL = "sqlite+aiosqlite:///./test.db"  # Replace with your database URL
-Database.initialize(DATABASE_URL)

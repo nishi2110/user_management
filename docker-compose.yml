@@ -14,6 +14,8 @@ services:
       retries: 5
     networks:
       - app-network
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
 
   pgadmin:
     image: dpage/pgadmin4
@@ -37,6 +39,9 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+    environment:
+      # Dynamically construct DATABASE_URL
+      DATABASE_URL: postgresql+asyncpg://user:password@postgres:5432/myappdb
     networks:
       - app-network
 
@@ -51,7 +56,6 @@ services:
     networks:
       - app-network
 
-  #Added Minio   
   minio:
     image: minio/minio
     container_name: minio
@@ -61,9 +65,11 @@ services:
     environment:
       MINIO_ROOT_USER: admin
       MINIO_ROOT_PASSWORD: password
-    command: server --console-address ":9001"
+    command: server --console-address ":9001" /data
     volumes:
       - minio-data:/data
+    networks:
+      - app-network
 
 volumes:
   postgres-data:
