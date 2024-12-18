@@ -142,9 +142,9 @@ async def test_account_lock_after_failed_logins(db_session, verified_user, notif
     assert is_locked, "The account should be locked after the maximum number of failed login attempts."
 
 # Test resetting a user's password
-async def test_reset_password(db_session, user, notification_service):
+async def test_reset_password(db_session, verified_user, notification_service):
     new_password = "NewPassword123!"
-    reset_success = await UserService.reset_password(db_session, user.id, new_password, notification_service)
+    reset_success = await UserService.reset_password(db_session, verified_user.id, new_password, notification_service)
     assert reset_success is True
 
 # Test verifying a user's email

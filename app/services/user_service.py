@@ -149,7 +149,7 @@ class UserService:
     async def reset_password(cls, session: AsyncSession, user_id: UUID, new_password: str, notification_service: NotificationService) -> bool:
         new_hashed_password = hash_password(new_password)
         user = await cls.get_by_id(session, user_id)
-        if user:
+        if user and user.email_verified:
             user.hashed_password = new_hashed_password
             user.failed_login_attempts = 0  # Resetting failed login attempts
             user.is_locked = False  # Unlocking the user account, if locked

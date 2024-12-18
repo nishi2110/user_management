@@ -126,7 +126,7 @@ async def delete_user(user_id: UUID, session: AsyncSession = Depends(get_db), to
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
-@router.put("/users/", status_code=status.HTTP_204_NO_CONTENT, name="unlock_user", tags=["User Management Requires (Admin or Manager Roles)"])
+@router.put("/user/{user_id}", status_code=status.HTTP_200_OK, name="unlock_user", tags=["User Management Requires (Admin or Manager Roles)"])
 async def unlock_user(user_id: UUID, session: AsyncSession = Depends(get_db), token: str = Depends(oauth2_scheme), notification_service: NotificationService =Depends(get_notification_service), current_user: dict = Depends(require_role(["ADMIN", "MANAGER"]))):
     """
     Unlock a user by their ID.
@@ -136,7 +136,7 @@ async def unlock_user(user_id: UUID, session: AsyncSession = Depends(get_db), to
     success = await UserService.unlock_user_account(session, user_id, notification_service)
     if not success:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found/Account is not locked")
-    return Response(status_code=status.HTTP_204_NO_CONTENT)
+    return Response(status_code=status.HTTP_200_OK)
 
 
 @router.post("/users/", response_model=UserResponse, status_code=status.HTTP_201_CREATED, tags=["User Management Requires (Admin or Manager Roles)"], name="create_user")
@@ -252,4 +252,14 @@ async def verify_email(user_id: UUID, token: str, session: AsyncSession = Depend
     """
     if await UserService.verify_email_with_token(session, user_id, token):
         return {"message": "Email verified successfully"}
+    raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid or expired verification token")
+
+
+@router.put("/reset-password/{user_id}/{new_password}", status_code=status.HTTP_200_OK, name="reset_password", tags=["User Account Management"])
+async def reset_password(user_id: UUID, new_password: str, session: AsyncSession = Depends(get_db), notification_service: NotificationService =Depends(get_notification_service)):
+    """
+    Reset user password with provided new password
+    """
+    if await UserService.reset_password(session, user_id, new_password, notification_service):
+        return Response(status_code=status.HTTP_200_OK)
     raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid or expired verification token")

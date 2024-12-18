@@ -31,7 +31,7 @@ from faker import Faker
 from app.main import app
 from app.database import Base, Database
 from app.models.user_model import User, UserRole
-from app.dependencies import get_db, get_settings
+from app.dependencies import get_db, get_settings, get_notification_service
 from app.utils.security import hash_password
 from app.services.email_service import EmailService
 from app.services.notification_service import NotificationService
@@ -61,9 +61,10 @@ def notification_service():
 
 # this is what creates the http client for your api tests
 @pytest.fixture(scope="function")
-async def async_client(db_session):
+async def async_client(db_session, notification_service):
     async with AsyncClient(app=app, base_url="http://testserver") as client:
         app.dependency_overrides[get_db] = lambda: db_session
+        app.dependency_overrides[get_notification_service] = lambda: notification_service
         try:
             yield client
         finally:
@@ -232,7 +233,7 @@ def user_token(user):
     token_data = {"sub": str(user.id), "role": user.role.name}
     return create_access_token(data=token_data, expires_delta=timedelta(minutes=30))
 
-@pytest.fixture
+@pytest.fixture(scope="session", autouse=True)
 def email_service():
     if settings.send_real_mail == 'true':
         # Return the real email service when specifically testing email functionality
@@ -241,10 +242,9 @@ def email_service():
         # Otherwise, use a mock to prevent actual email sending
         mock_service = AsyncMock(spec=EmailService)
         mock_service.send_email.return_value = None
-        mock_service.send_email.return_value = None
         return mock_service
     
-@pytest.fixture
+@pytest.fixture(scope="session", autouse=True)
 def notification_service():
     if settings.send_real_mail == 'true':
         # Return the real email service when specifically testing email functionality
@@ -253,5 +253,9 @@ def notification_service():
         # Otherwise, use a mock to prevent actual email sending
         mock_service = AsyncMock(spec=NotificationService)
         mock_service.email_verification.return_value = None
-        mock_service.email_verification.return_value = None
+        mock_service.account_locked.return_value = None
+        mock_service.account_unlocked.return_value = None
+        mock_service.role_updated.return_value = None
+        mock_service.password_updated.return_value = None
+        mock_service.professional_status_updated.return_value = None
         return mock_service
