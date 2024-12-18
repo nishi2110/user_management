@@ -4,8 +4,10 @@ from starlette.responses import JSONResponse
 from starlette.middleware.cors import CORSMiddleware  # Import the CORSMiddleware
 from app.database import Database
 from app.dependencies import get_settings
+from app.services.user_service import UserService
 from app.routers import user_routes
 from app.utils.api_description import getDescription
+
 app = FastAPI(
     title="User Management",
     description=getDescription(),
@@ -32,6 +34,9 @@ app.add_middleware(
 async def startup_event():
     settings = get_settings()
     Database.initialize(settings.database_url, settings.debug)
+    async_session_factory = Database.get_session_factory()
+    async with async_session_factory() as session:
+        await UserService.create_default_db_admin(session)
 
 @app.exception_handler(Exception)
 async def exception_handler(request, exc):

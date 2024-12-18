@@ -1,25 +1,15 @@
 from builtins import ValueError, any, bool, str
-from pydantic import BaseModel, EmailStr, Field, validator, root_validator
+from pydantic import BaseModel, EmailStr, Field, field_validator, model_validator
 from typing import Optional, List
 from datetime import datetime
 from enum import Enum
 import uuid
 import re
 from app.models.user_model import UserRole
-from app.utils.nickname_gen import generate_nickname
-
-
-def validate_url(url: Optional[str]) -> Optional[str]:
-    if url is None:
-        return url
-    url_regex = r'^https?:\/\/[^\s/$.?#].[^\s]*$'
-    if not re.match(url_regex, url):
-        raise ValueError('Invalid URL format')
-    return url
 
 class UserBase(BaseModel):
     email: EmailStr = Field(..., example="john.doe@example.com")
-    nickname: Optional[str] = Field(None, min_length=3, pattern=r'^[\w-]+$', example=generate_nickname())
+    nickname: str = Field(None, min_length=3, max_length=25, pattern=r'^[\w-]+$', example="john_doe_123")
     first_name: Optional[str] = Field(None, example="John")
     last_name: Optional[str] = Field(None, example="Doe")
     bio: Optional[str] = Field(None, example="Experienced software developer specializing in web applications.")
@@ -28,18 +18,34 @@ class UserBase(BaseModel):
     github_profile_url: Optional[str] = Field(None, example="https://github.com/johndoe")
     role: UserRole
 
-    _validate_urls = validator('profile_picture_url', 'linkedin_profile_url', 'github_profile_url', pre=True, allow_reuse=True)(validate_url)
+    @field_validator('profile_picture_url', 'linkedin_profile_url', 'github_profile_url', mode='before')
+    def validate_url(cls, url: Optional[str]) -> Optional[str]:
+        if url is None:
+            return url
+        url_regex = r'^https?:\/\/[^\s/$.?#].[^\s]*$'
+        if not re.match(url_regex, url):
+            raise ValueError('Invalid URL format')
+        return url
  
     class Config:
         from_attributes = True
 
 class UserCreate(UserBase):
     email: EmailStr = Field(..., example="john.doe@example.com")
+    nickname: str = Field(None, min_length=3, max_length=25, pattern=r'^[\w-]+$', example="john_doe_123")
     password: str = Field(..., example="Secure*1234")
+
+    @field_validator('password', mode='before')
+    def validate_password(cls, password: Optional[str]) -> Optional[str]:
+        password_regex = r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*.])[A-Za-z\d!@#$%^&*.]{8,}$'
+        if not re.match(password_regex, password):
+            raise ValueError('Invalid password: must be at least 8 characters long, contain upper and lower case letters, and include at least 1 number and special characters.')
+        return password
+
 
 class UserUpdate(UserBase):
     email: Optional[EmailStr] = Field(None, example="john.doe@example.com")
-    nickname: Optional[str] = Field(None, min_length=3, pattern=r'^[\w-]+$', example="john_doe123")
+    nickname: str = Field(None, min_length=3, max_length=25, pattern=r'^[\w-]+$', example="john_doe_123")
     first_name: Optional[str] = Field(None, example="John")
     last_name: Optional[str] = Field(None, example="Doe")
     bio: Optional[str] = Field(None, example="Experienced software developer specializing in web applications.")
@@ -47,8 +53,8 @@ class UserUpdate(UserBase):
     linkedin_profile_url: Optional[str] =Field(None, example="https://linkedin.com/in/johndoe")
     github_profile_url: Optional[str] = Field(None, example="https://github.com/johndoe")
     role: Optional[str] = Field(None, example="AUTHENTICATED")
-
-    @root_validator(pre=True)
+    
+    @model_validator(mode='before')
     def check_at_least_one_value(cls, values):
         if not any(values.values()):
             raise ValueError("At least one field must be provided for update")
@@ -57,7 +63,7 @@ class UserUpdate(UserBase):
 class UserResponse(UserBase):
     id: uuid.UUID = Field(..., example=uuid.uuid4())
     email: EmailStr = Field(..., example="john.doe@example.com")
-    nickname: Optional[str] = Field(None, min_length=3, pattern=r'^[\w-]+$', example=generate_nickname())    
+    nickname: str = Field(None, min_length=3, max_length=25, pattern=r'^[\w-]+$', example="john_doe_123")    
     is_professional: Optional[bool] = Field(default=False, example=True)
     role: UserRole
 
@@ -71,7 +77,7 @@ class ErrorResponse(BaseModel):
 
 class UserListResponse(BaseModel):
     items: List[UserResponse] = Field(..., example=[{
-        "id": uuid.uuid4(), "nickname": generate_nickname(), "email": "john.doe@example.com",
+        "id": uuid.uuid4(), "nickname": "john_doe_123", "email": "john.doe@example.com",
         "first_name": "John", "bio": "Experienced developer", "role": "AUTHENTICATED",
         "last_name": "Doe", "bio": "Experienced developer", "role": "AUTHENTICATED",
         "profile_picture_url": "https://example.com/profiles/john.jpg", 
