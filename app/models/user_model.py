@@ -3,11 +3,12 @@ from datetime import datetime
 from enum import Enum
 import uuid
 from sqlalchemy import (
-    Column, String, Integer, DateTime, Boolean, func, Enum as SQLAlchemyEnum
+    Column, String, Integer, DateTime, Boolean, func, Enum as SQLAlchemyEnum, ForeignKey
 )
-from sqlalchemy.dialects.postgresql import UUID, ENUM
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.database import Base
+
 
 class UserRole(Enum):
     """Enumeration of user roles within the application, stored as ENUM in the database."""
@@ -16,39 +17,17 @@ class UserRole(Enum):
     MANAGER = "MANAGER"
     ADMIN = "ADMIN"
 
+
+class InvitationStatus(Enum):
+    """Enumeration of invitation statuses."""
+    PENDING = "PENDING"
+    ACCEPTED = "ACCEPTED"
+    REVOKED = "REVOKED"
+
+
 class User(Base):
     """
     Represents a user within the application, corresponding to the 'users' table in the database.
-    This class uses SQLAlchemy ORM for mapping attributes to database columns efficiently.
-    
-    Attributes:
-        id (UUID): Unique identifier for the user.
-        nickname (str): Unique nickname for privacy, required.
-        email (str): Unique email address, required.
-        email_verified (bool): Flag indicating if the email has been verified.
-        hashed_password (str): Hashed password for security, required.
-        first_name (str): Optional first name of the user.
-        last_name (str): Optional first name of the user.
-
-        bio (str): Optional biographical information.
-        profile_picture_url (str): Optional URL to a profile picture.
-        linkedin_profile_url (str): Optional LinkedIn profile URL.
-        github_profile_url (str): Optional GitHub profile URL.
-        role (UserRole): Role of the user within the application.
-        is_professional (bool): Flag indicating professional status.
-        professional_status_updated_at (datetime): Timestamp of last professional status update.
-        last_login_at (datetime): Timestamp of the last login.
-        failed_login_attempts (int): Count of failed login attempts.
-        is_locked (bool): Flag indicating if the account is locked.
-        created_at (datetime): Timestamp when the user was created, set by the server.
-        updated_at (datetime): Timestamp of the last update, set by the server.
-
-    Methods:
-        lock_account(): Locks the user account.
-        unlock_account(): Unlocks the user account.
-        verify_email(): Marks the user's email as verified.
-        has_role(role_name): Checks if the user has a specified role.
-        update_professional_status(status): Updates the professional status and logs the update time.
     """
     __tablename__ = "users"
     __mapper_args__ = {"eager_defaults": True}
@@ -62,7 +41,7 @@ class User(Base):
     profile_picture_url: Mapped[str] = Column(String(255), nullable=True)
     linkedin_profile_url: Mapped[str] = Column(String(255), nullable=True)
     github_profile_url: Mapped[str] = Column(String(255), nullable=True)
-    role: Mapped[UserRole] = Column(SQLAlchemyEnum(UserRole, name='UserRole', create_constraint=True), nullable=False)
+    role: Mapped[UserRole] = Column(SQLAlchemyEnum(UserRole, name="UserRole", create_constraint=True), nullable=False)
     is_professional: Mapped[bool] = Column(Boolean, default=False)
     professional_status_updated_at: Mapped[datetime] = Column(DateTime(timezone=True), nullable=True)
     last_login_at: Mapped[datetime] = Column(DateTime(timezone=True), nullable=True)
@@ -70,10 +49,12 @@ class User(Base):
     is_locked: Mapped[bool] = Column(Boolean, default=False)
     created_at: Mapped[datetime] = Column(DateTime(timezone=True), server_default=func.now())
     updated_at: Mapped[datetime] = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
-    verification_token = Column(String, nullable=True)
+    verification_token: Mapped[str] = Column(String, nullable=True)
     email_verified: Mapped[bool] = Column(Boolean, default=False, nullable=False)
     hashed_password: Mapped[str] = Column(String(255), nullable=False)
 
+    # Relationship with invitations
+    sent_invitations = relationship("Invitation", back_populates="inviter", cascade="all, delete-orphan")
 
     def __repr__(self) -> str:
         """Provides a readable representation of a user object."""
@@ -95,3 +76,37 @@ class User(Base):
         """Updates the professional status and logs the update time."""
         self.is_professional = status
         self.professional_status_updated_at = func.now()
+
+
+class Invitation(Base):
+    """
+    Represents an invitation sent by a user to invite another person to the application.
+    """
+    __tablename__ = "invitations"
+    __mapper_args__ = {"eager_defaults": True}
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    inviter_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
+    invitee_email: Mapped[str] = Column(String(255), unique=True, nullable=False, index=True)
+    invitee_name: Mapped[str] = Column(String(100), nullable=False)
+    status: Mapped[InvitationStatus] = Column(SQLAlchemyEnum(InvitationStatus, name="InvitationStatus"), default=InvitationStatus.PENDING, nullable=False)
+    qr_code_url: Mapped[str] = Column(String(255), nullable=False)
+    accepted_at: Mapped[datetime] = Column(DateTime(timezone=True), nullable=True)
+    created_at: Mapped[datetime] = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at: Mapped[datetime] = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
+    # Relationship with inviter
+    inviter = relationship("User", back_populates="sent_invitations")
+
+    def __repr__(self) -> str:
+        """Provides a readable representation of an invitation."""
+        return f"<Invitation {self.invitee_email}, Status: {self.status.name}>"
+
+    def mark_accepted(self):
+        """Marks the invitation as accepted and logs the time."""
+        self.status = InvitationStatus.ACCEPTED
+        self.accepted_at = datetime.utcnow()
+
+    def revoke(self):
+        """Revokes the invitation."""
+        self.status = InvitationStatus.REVOKED
