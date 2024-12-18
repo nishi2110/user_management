@@ -46,6 +46,8 @@ class Settings(BaseSettings):
         # If your .env file is not in the root directory, adjust the path accordingly.
         env_file = ".env"
         env_file_encoding = 'utf-8'
+        # Ignore error for extra arguements 
+        extra = "ignore"
 
 # Instantiate settings to be imported in your application
 settings = Settings()

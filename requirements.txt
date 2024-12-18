@@ -61,3 +61,6 @@ tomli==2.0.1
 typing_extensions==4.10.0
 uvicorn==0.29.0
 validators==0.24.0
+
+#import minio
+minio==7.2.12
