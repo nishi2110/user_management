@@ -8,7 +8,7 @@ class Settings(BaseSettings):
     # Server configuration
     server_base_url: AnyUrl = Field(default='http://localhost', description="Base URL of the server")
     server_download_folder: str = Field(default='downloads', description="Folder for storing downloaded files")
-
+    min_password_length = 5
     # Security and authentication configuration
     secret_key: str = Field(default="secret-key", description="Secret key for encryption")
     algorithm: str = Field(default="HS256", description="Algorithm used for encryption")
