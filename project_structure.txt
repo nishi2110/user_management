@@ -163,5 +163,3 @@
     ├── pyvenv.cfg
     └── share
         └── man
-
-40 directories, 124 files
