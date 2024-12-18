@@ -26,9 +26,33 @@ def create_invite(
     db.refresh(invite)
 
     # Generate and upload QR Code
-    qr_path = generate_qr_code(inviter.nickname, invite.id)
-    qr_url = upload_to_minio(qr_path, "qrcodes", f"invites/{invite.id}.png")
+    qr_path = qrgeneration(inviter.nickname, invite.id)
+    qr_url = qrcode_utils(qr_path, "qrcodes", f"invites/{invite.id}.png")
     invite.qr_code_url = qr_url
     db.commit()
 
     return {"message": "Invite created", "qr_code_url": qr_url}
+
+@router.get("/accept/")
+def accept_invite(invite: str, db: Session = Depends(get_db)):
+    try:
+        inviter_nickname, invite_id = base64.urlsafe_b64decode(invite).decode().split("-")
+        invitation = db.query(Invitation).filter(Invitation.id == invite_id).first()
+        if not invitation or invitation.status != InvitationStatus.PENDING:
+            raise HTTPException(status_code=400, detail="Invalid or expired invitation")
+
+        invitation.mark_accepted()
+        db.commit()
+        return {"message": "Invitation accepted", "redirect_url": os.getenv("INVITE_REDIRECT_URL")}
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid invitation data")
+    
+@router.get("/invites/")
+def get_invites(user_id: uuid.UUID, db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    sent_invites = db.query(Invitation).filter(Invitation.inviter_id == user_id).all()
+    accepted_count = sum(1 for invite in sent_invites if invite.status == InvitationStatus.ACCEPTED)
+    return {"sent": len(sent_invites), "accepted": accepted_count}

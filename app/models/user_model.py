@@ -7,7 +7,8 @@ from sqlalchemy import (
 )
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from app.database import Base
+from app.database import Base, Database  # Importing Base and Database for initialization
+
 
 # User Roles Enum
 class UserRole(Enum):
@@ -112,3 +113,8 @@ class Invitation(Base):
     def mark_accepted(self):
         """Marks the invitation as accepted and logs the time."""
         self.status = InvitationStatus.ACCEPTED
+
+
+# Database Initialization (Example)
+DATABASE_URL = "sqlite+aiosqlite:///./test.db"  # Replace with your database URL
+Database.initialize(DATABASE_URL)

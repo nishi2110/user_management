@@ -64,3 +64,4 @@ validators==0.24.0
 
 #import minio
 minio==7.2.12
+aiosqlite==0.20.0

@@ -1,6 +1,7 @@
 import qrcode
 import base64
 import os
+from models.user_model import User
 
 def generate_qr_code(inviter_nickname: str, invite_id: uuid.UUID) -> str:
     encoded_data = base64.urlsafe_b64encode(inviter_nickname.encode()).decode()
