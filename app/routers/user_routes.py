@@ -126,6 +126,19 @@ async def delete_user(user_id: UUID, session: AsyncSession = Depends(get_db), to
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
+@router.put("/users/", status_code=status.HTTP_204_NO_CONTENT, name="unlock_user", tags=["User Management Requires (Admin or Manager Roles)"])
+async def unlock_user(user_id: UUID, session: AsyncSession = Depends(get_db), token: str = Depends(oauth2_scheme), notification_service: NotificationService =Depends(get_notification_service), current_user: dict = Depends(require_role(["ADMIN", "MANAGER"]))):
+    """
+    Unlock a user by their ID.
+
+    - **user_id**: UUID of the user to delete.
+    """
+    success = await UserService.unlock_user_account(session, user_id, notification_service)
+    if not success:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found/Account is not locked")
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
 @router.post("/users/", response_model=UserResponse, status_code=status.HTTP_201_CREATED, tags=["User Management Requires (Admin or Manager Roles)"], name="create_user")
 async def create_user(user: UserCreate, request: Request, session: AsyncSession = Depends(get_db), notification_service: NotificationService =Depends(get_notification_service), token: str = Depends(oauth2_scheme), current_user: dict = Depends(require_role(["ADMIN", "MANAGER"]))):
     """
@@ -195,7 +208,7 @@ async def list_users(
     )
 
 
-@router.post("/register/", response_model=UserResponse, tags=["Login and Registration"])
+@router.post("/register/", response_model=UserResponse, tags=["User Account Management"])
 async def register(user_data: UserCreate, session: AsyncSession = Depends(get_db), notification_service: NotificationService =Depends(get_notification_service)):
     existing_user = await UserService.get_by_email(session, user_data.email)
     if existing_user:
@@ -208,12 +221,12 @@ async def register(user_data: UserCreate, session: AsyncSession = Depends(get_db
         return user
 
 
-@router.post("/login/", response_model=TokenResponse, tags=["Login and Registration"])
-async def login(form_data: OAuth2PasswordRequestForm = Depends(), session: AsyncSession = Depends(get_db)):
+@router.post("/login/", response_model=TokenResponse, tags=["User Account Management"])
+async def login(form_data: OAuth2PasswordRequestForm = Depends(), session: AsyncSession = Depends(get_db), notification_service: NotificationService =Depends(get_notification_service)):
     if await UserService.is_account_locked(session, form_data.username):
         raise HTTPException(status_code=400, detail="Account locked due to too many failed login attempts.")
 
-    user = await UserService.login_user(session, form_data.username, form_data.password)
+    user = await UserService.login_user(session, form_data.username, form_data.password, notification_service)
     if user:
         if not user.email_verified:
             raise HTTPException(status_code=400, detail="Complete email verification to login.")
@@ -229,7 +242,7 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends(), session: Async
     raise HTTPException(status_code=401, detail="Incorrect email or password.")
 
 
-@router.get("/verify-email/{user_id}/{token}", status_code=status.HTTP_200_OK, name="verify_email", tags=["Login and Registration"])
+@router.get("/verify-email/{user_id}/{token}", status_code=status.HTTP_200_OK, name="verify_email", tags=["User Account Management"])
 async def verify_email(user_id: UUID, token: str, session: AsyncSession = Depends(get_db), notification_service: NotificationService =Depends(get_notification_service)):
     """
     Verify user's email with a provided token.

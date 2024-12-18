@@ -39,7 +39,7 @@ class Settings(BaseSettings):
     send_real_mail: bool = Field(default=False, description="use mock")
     # Email settings for Mailtrap
     mailtrap_useremail: str = Field(default='donotreply@example.com', description="mailtrap user email")
-    mailtrap_api_url: AnyUrl = Field(default='http://mailtrap-api-url', description="mailtrap.io api credentials url")
+    mailtrap_api_url: str = Field(default='http://mailtrap-api-url', description="mailtrap.io api credentials url")
     mailtrap_api_token: str = Field(default='your-mailtrap-api-token', description="mailtrap api token")
     # kafka config
     kafka_broker_address: str = Field(default='kafka:9092', description="kafka broker_address with hostname and port")

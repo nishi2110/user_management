@@ -1,11 +1,10 @@
-from app.utils.template_manager import EmailTemplateManager
 from app.services.email_service import EmailService
-from app.models.user_model import User
+from app.models.user_model import User, UserRole
 from settings.config import settings
 
 class NotificationService:
     email_service = EmailService()
-    text_service = None
+    text_service = None # we can implement texting services by collecting the user's phone number
 
     @classmethod
     def email_verification(cls, user: User):
@@ -36,6 +35,26 @@ class NotificationService:
             "email": user.email
         }
         cls.email_service.send_email(email_type=cls.account_unlocked.__name__, subject=subject, user_data=user_data)
+
+    @classmethod
+    def role_updated(cls, user: User, previous_role: str):
+        subject = "Role Updated!"
+        user_data = {
+            "name": user.first_name,
+            "email": user.email,
+            "role": user.role,
+            "previous_role": previous_role
+        }
+        cls.email_service.send_email(email_type=cls.role_updated.__name__, subject=subject, user_data=user_data)
+
+    @classmethod
+    def password_updated(cls, user: User):
+        subject = "Password Updated!"
+        user_data = {
+            "name": user.first_name,
+            "email": user.email,
+        }
+        cls.email_service.send_email(email_type=cls.password_updated.__name__, subject=subject, user_data=user_data)
 
     @classmethod
     def professional_status_updated(cls, user: User):

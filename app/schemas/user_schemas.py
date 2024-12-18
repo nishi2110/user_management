@@ -1,25 +1,11 @@
 from builtins import ValueError, any, bool, str
-from pydantic import BaseModel, EmailStr, Field, validator, root_validator
+from pydantic import BaseModel, EmailStr, Field, field_validator, model_validator
 from typing import Optional, List
 from datetime import datetime
 from enum import Enum
 import uuid
 import re
 from app.models.user_model import UserRole
-
-def validate_url(url: Optional[str]) -> Optional[str]:
-    if url is None:
-        return url
-    url_regex = r'^https?:\/\/[^\s/$.?#].[^\s]*$'
-    if not re.match(url_regex, url):
-        raise ValueError('Invalid URL format')
-    return url
-
-def validate_password(password: Optional[str]) -> Optional[str]:
-    password_regex = r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*.])[A-Za-z\d!@#$%^&*.]{8,}$'
-    if not re.match(password_regex, password):
-        raise ValueError('Invalid password: must be at least 8 characters long, contain upper and lower case letters, and include at least 1 number and special characters.')
-    return password
 
 class UserBase(BaseModel):
     email: EmailStr = Field(..., example="john.doe@example.com")
@@ -32,7 +18,14 @@ class UserBase(BaseModel):
     github_profile_url: Optional[str] = Field(None, example="https://github.com/johndoe")
     role: UserRole
 
-    _validate_urls = validator('profile_picture_url', 'linkedin_profile_url', 'github_profile_url', pre=True, allow_reuse=True)(validate_url)
+    @field_validator('profile_picture_url', 'linkedin_profile_url', 'github_profile_url', mode='before')
+    def validate_url(cls, url: Optional[str]) -> Optional[str]:
+        if url is None:
+            return url
+        url_regex = r'^https?:\/\/[^\s/$.?#].[^\s]*$'
+        if not re.match(url_regex, url):
+            raise ValueError('Invalid URL format')
+        return url
  
     class Config:
         from_attributes = True
@@ -42,7 +35,13 @@ class UserCreate(UserBase):
     nickname: str = Field(None, min_length=3, max_length=25, pattern=r'^[\w-]+$', example="john_doe_123")
     password: str = Field(..., example="Secure*1234")
 
-    _validate_password = validator('password', pre=True, allow_reuse=True)(validate_password)
+    @field_validator('password', mode='before')
+    def validate_password(cls, password: Optional[str]) -> Optional[str]:
+        password_regex = r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*.])[A-Za-z\d!@#$%^&*.]{8,}$'
+        if not re.match(password_regex, password):
+            raise ValueError('Invalid password: must be at least 8 characters long, contain upper and lower case letters, and include at least 1 number and special characters.')
+        return password
+
 
 class UserUpdate(UserBase):
     email: Optional[EmailStr] = Field(None, example="john.doe@example.com")
@@ -54,8 +53,8 @@ class UserUpdate(UserBase):
     linkedin_profile_url: Optional[str] =Field(None, example="https://linkedin.com/in/johndoe")
     github_profile_url: Optional[str] = Field(None, example="https://github.com/johndoe")
     role: Optional[str] = Field(None, example="AUTHENTICATED")
-
-    @root_validator(pre=True)
+    
+    @model_validator(mode='before')
     def check_at_least_one_value(cls, values):
         if not any(values.values()):
             raise ValueError("At least one field must be provided for update")

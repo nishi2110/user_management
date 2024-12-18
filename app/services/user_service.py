@@ -82,9 +82,7 @@ class UserService:
     @classmethod
     async def update(cls, session: AsyncSession, user_id: UUID, update_data: Dict[str, str]) -> Optional[User]:
         try:
-            # validated_data = UserUpdate(**update_data).dict(exclude_unset=True)
             validated_data = UserUpdate(**update_data).model_dump(exclude_unset=True)
-
             if 'password' in validated_data:
                 validated_data['hashed_password'] = hash_password(validated_data.pop('password'))
             query = update(User).where(User.id == user_id).values(**validated_data).execution_options(synchronize_session="fetch")
@@ -122,7 +120,7 @@ class UserService:
         return await cls.create(session, user_data, get_email_service)
 
     @classmethod
-    async def login_user(cls, session: AsyncSession, email: str, password: str) -> Optional[User]:
+    async def login_user(cls, session: AsyncSession, email: str, password: str, notification_service: NotificationService) -> Optional[User]:
         user = await cls.get_by_email(session, email)
         if user:
             if user.is_locked:
@@ -137,6 +135,7 @@ class UserService:
                 user.failed_login_attempts += 1
                 if user.failed_login_attempts >= settings.max_login_attempts:
                     user.lock_account()
+                    notification_service.account_locked(user)
                 session.add(user)
                 await session.commit()
         return None
@@ -147,15 +146,16 @@ class UserService:
         return user.is_locked if user else False
 
     @classmethod
-    async def reset_password(cls, session: AsyncSession, user_id: UUID, new_password: str) -> bool:
-        hashed_password = hash_password(new_password)
+    async def reset_password(cls, session: AsyncSession, user_id: UUID, new_password: str, notification_service: NotificationService) -> bool:
+        new_hashed_password = hash_password(new_password)
         user = await cls.get_by_id(session, user_id)
         if user:
-            user.hashed_password = hashed_password
+            user.hashed_password = new_hashed_password
             user.failed_login_attempts = 0  # Resetting failed login attempts
             user.is_locked = False  # Unlocking the user account, if locked
             session.add(user)
             await session.commit()
+            notification_service.password_updated(user)
             return True
         return False
 
@@ -183,12 +183,13 @@ class UserService:
         return count
     
     @classmethod
-    async def unlock_user_account(cls, session: AsyncSession, user_id: UUID) -> bool:
+    async def unlock_user_account(cls, session: AsyncSession, user_id: UUID, notification_service: NotificationService) -> bool:
         user = await cls.get_by_id(session, user_id)
         if user and user.is_locked:
             user.unlock_account()
             session.add(user)
             await session.commit()
+            notification_service.account_unlocked(user)
             return True
         return False
     

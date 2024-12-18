@@ -31,6 +31,10 @@ def send_user_email(self, subject: str, html_content: str, user_email: str):
         response = requests.post(settings.mailtrap_api_url, headers=headers, data=json.dumps(payload))
         response.raise_for_status()
         logger.info(f"Email sent successfully to {user_email}")
+        return {
+            "status_code": response.status_code,
+            "recipient": user_email,
+        }
     except requests.exceptions.RequestException as e:
         logger.error(f"Failed to send email: {e}")
         raise Exception(e)
