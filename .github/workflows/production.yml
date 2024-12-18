@@ -70,9 +70,9 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           push: true
-          tags: hk574/final_project_user_management:${{ github.sha }} # Uses the Git SHA for tagging
+          tags: Hk574/final_project_user_management:${{ github.sha }} # Uses the Git SHA for tagging
           platforms: linux/amd64,linux/arm64 # Multi-platform support
-          cache-from: type=registry,ref=hk574/final_project_user_management:cache
+          cache-from: type=registry,ref=Hk574/final_project_user_management:cache
           cache-to: type=inline,mode=max
           
       - name: Scan the Docker image
