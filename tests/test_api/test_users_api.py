@@ -51,6 +51,11 @@ async def test_update_user_email_access_allowed(async_client, admin_user, admin_
     assert response.status_code == 200
     assert response.json()["email"] == updated_data["email"]
 
+@pytest.mark.asyncio
+async def test_reset_password(async_client, verified_user, user_token):
+    headers = {"Authorization": f"Bearer {user_token}"}
+    response = await async_client.put(f"/reset-password/{verified_user.id}/{'NewSecure*1234'}", headers=headers)
+    assert response.status_code == 200
 
 @pytest.mark.asyncio
 async def test_delete_user(async_client, admin_user, admin_token):
@@ -165,6 +170,13 @@ async def test_login_locked_user(async_client, locked_user):
     response = await async_client.post("/login/", data=urlencode(form_data), headers={"Content-Type": "application/x-www-form-urlencoded"})
     assert response.status_code == 400
     assert "Account locked due to too many failed login attempts." in response.json().get("detail", "")
+
+@pytest.mark.asyncio
+async def test_unlock_locked_user(async_client, locked_user, admin_token):
+    headers = {"Authorization": f"Bearer {admin_token}"}
+    response = await async_client.put(f"/user/{locked_user.id}", headers=headers)
+    assert response.status_code == 200
+
 @pytest.mark.asyncio
 async def test_delete_user_does_not_exist(async_client, admin_token):
     non_existent_user_id = "00000000-0000-0000-0000-000000000000"  # Valid UUID format

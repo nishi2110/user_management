@@ -6,6 +6,7 @@ from pydantic_settings import BaseSettings
 class Settings(BaseSettings):
     max_login_attempts: int = Field(default=3, description="Background color of QR codes")
     # Server configuration
+    server_name: str = Field(default='user_management', description="Name of the server/application")
     server_base_url: AnyUrl = Field(default='http://localhost', description="Base URL of the server")
     server_download_folder: str = Field(default='downloads', description="Folder for storing downloaded files")
 
@@ -37,11 +38,11 @@ class Settings(BaseSettings):
     openai_api_key: str = Field(default='NONE', description="Open AI Api Key")
     send_real_mail: bool = Field(default=False, description="use mock")
     # Email settings for Mailtrap
-    smtp_server: str = Field(default='smtp.mailtrap.io', description="SMTP server for sending emails")
-    smtp_port: int = Field(default=2525, description="SMTP port for sending emails")
-    smtp_username: str = Field(default='your-mailtrap-username', description="Username for SMTP server")
-    smtp_password: str = Field(default='your-mailtrap-password', description="Password for SMTP server")
-
+    mailtrap_useremail: str = Field(default='donotreply@example.com', description="mailtrap user email")
+    mailtrap_api_url: str = Field(default='http://mailtrap-api-url', description="mailtrap.io api credentials url")
+    mailtrap_api_token: str = Field(default='your-mailtrap-api-token', description="mailtrap api token")
+    # kafka config
+    kafka_broker_address: str = Field(default='kafka:9092', description="kafka broker_address with hostname and port")
 
     class Config:
         # If your .env file is not in the root directory, adjust the path accordingly.

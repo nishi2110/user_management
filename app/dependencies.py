@@ -3,8 +3,7 @@ from fastapi import Depends, HTTPException
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.database import Database
-from app.utils.template_manager import TemplateManager
-from app.services.email_service import EmailService
+from app.services.notification_service import NotificationService
 from app.services.jwt_service import decode_token
 from settings.config import Settings
 from fastapi import Depends
@@ -13,9 +12,8 @@ def get_settings() -> Settings:
     """Return application settings."""
     return Settings()
 
-def get_email_service() -> EmailService:
-    template_manager = TemplateManager()
-    return EmailService(template_manager=template_manager)
+def get_notification_service() -> NotificationService:
+    return NotificationService()
 
 async def get_db() -> AsyncSession:
     """Dependency that provides a database session for each request."""
@@ -25,7 +23,6 @@ async def get_db() -> AsyncSession:
             yield session
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
-        
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/login")
 
